@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # pnpm uses the npm ecosystem identifier in Dependabot
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    ignore:
+      # esbuild is transitively pinned by vite 5 to 0.21.x;
+      # the security fix (0.25.0) requires a vite major upgrade
+      - dependency-name: esbuild
+        versions: [">=0.22.0"]
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      production-dependencies:
+        dependency-type: production
+        update-types:
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - ci
