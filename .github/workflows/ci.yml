@@ -39,13 +39,25 @@ jobs:
           node-version: 20
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-      - name: Upload coverage
+
+      - name: Run tests with JUnit reporter and coverage
+        run: pnpm vitest run --reporter=default --reporter=junit --outputFile.junit=test-results-junit.xml --coverage --coverage.reporter=json --coverage.reporter=text
+
+      - name: Upload test results (JUnit XML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results-junit.xml
+
+      - name: Upload coverage (JSON + V8)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coverage/
+          path: |
+            coverage/coverage-final.json
+            coverage/
 
   build:
     name: Build

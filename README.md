@@ -137,6 +137,22 @@ pnpm docker:native:down   # Stop the Docker services
 
 The **pre-push** hook ensures pushed code always has up-to-date build artifacts. It diffs against the upstream branch, and if `src/`, config, or Docker files changed, it triggers the appropriate rebuilds before allowing the push.
 
+### CI/CD Pipeline
+
+The [GitHub Actions workflow](.github/workflows/ci.yml) runs on every push and PR to `main`:
+
+```
+Lint → Test (+ JUnit XML + coverage) → Build (macOS, Windows, Linux)
+```
+
+| Job     | Runs on         | Produces                                                                  |
+| ------- | --------------- | ------------------------------------------------------------------------- |
+| `lint`  | ubuntu-latest   | Pass/fail (ESLint strict: no-any, React perf rules)                       |
+| `test`  | ubuntu-latest   | `test-results` artifact (JUnit XML) + `coverage` artifact (Istanbul JSON) |
+| `build` | matrix (3 OSes) | `build-ubuntu-latest`, `build-macos-latest`, `build-windows-latest`       |
+
+All test and coverage artifacts are generated in the pipeline and downloadable from the **Actions** tab — they are **not committed** to the repo. This keeps the repository clean and ensures artifacts always reflect the latest code.
+
 ---
 
 ## Architecture
@@ -532,7 +548,6 @@ Error: Could not resolve "bufferutil" imported by "ws". Is it installed?
 9. **Auto-updater** — Squirrel-based updates via electron-forge
 10. **i18n** — i18next for multi-language support
 11. **Swagger UI** — Embedded OpenAPI viewer component
-12. **Grafana integration** — Export Prometheus metrics to external Grafana instance
 
 ---
 
@@ -562,10 +577,15 @@ Error: Could not resolve "bufferutil" imported by "ws". Is it installed?
 | Contract (Pact)  | 14     | WS event schema validation, discriminated unions                    |
 | **Total**        | **81** |                                                                     |
 
-**Verified results committed to repo:**
+**CI/CD Artifacts** (generated on every push/PR via [GitHub Actions](.github/workflows/ci.yml)):
 
-- [`test-results-junit.xml`](test-results-junit.xml) — JUnit XML (81 tests, 0 failures)
-- [`test-coverage.json`](test-coverage.json) — Istanbul/V8 coverage data (JSON)
+| Artifact       | Format                  | Contents                                |
+| -------------- | ----------------------- | --------------------------------------- |
+| `test-results` | JUnit XML               | 81 tests, 0 failures, timing per suite  |
+| `coverage`     | Istanbul/V8 JSON + text | Statement, branch, function, line %     |
+| `build-*`      | Electron Forge          | Platform binaries (macOS/Windows/Linux) |
+
+Artifacts are downloadable from the **Actions** tab of each CI run — not committed to the repo.
 
 Run locally: `pnpm test` (all tests) · `pnpm test:coverage` (with coverage report)
 
