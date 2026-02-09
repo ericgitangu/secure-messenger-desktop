@@ -1,13 +1,13 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import type Database from 'better-sqlite3';
-import { getRandomChat, insertMessage } from '../db/queries';
 import {
   WS_PORT,
   WS_EMIT_INTERVAL_MIN,
   WS_EMIT_INTERVAL_MAX,
   HEARTBEAT_INTERVAL,
-} from '../../shared/constants';
+} from '@shared/constants';
+import { getRandomChat, insertMessage } from '../db/queries';
+import type Database from 'better-sqlite3';
 
 const SENDERS = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
 const MESSAGES = [

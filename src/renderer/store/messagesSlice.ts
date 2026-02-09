@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { MESSAGES_PAGE_SIZE, SEARCH_RESULTS_LIMIT } from '../../shared/constants';
+import { MESSAGES_PAGE_SIZE, SEARCH_RESULTS_LIMIT } from '@shared/constants';
 import { bridge } from '../api/bridge';
 import type { Message } from '../types/models';
 

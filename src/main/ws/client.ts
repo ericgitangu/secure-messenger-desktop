@@ -7,8 +7,8 @@ import {
   RECONNECT_MAX_DELAY,
   RECONNECT_MAX_RETRIES,
   IPC_CHANNELS,
-} from '../../shared/constants';
-import type { ConnectionState } from '../../shared/constants';
+} from '@shared/constants';
+import type { ConnectionState } from '@shared/constants';
 
 let ws: WebSocket | null = null;
 let reconnectAttempts = 0;

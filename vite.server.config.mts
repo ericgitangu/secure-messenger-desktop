@@ -21,6 +21,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
       '@main': path.resolve(__dirname, 'src/main'),
       '@shared': path.resolve(__dirname, 'src/shared'),
+      '@server': path.resolve(__dirname, 'src/server'),
     },
   },
   build: {

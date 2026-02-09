@@ -4,7 +4,7 @@ import connectionReducer, {
   setReconnecting,
   setOffline,
   setConnectionState,
-} from '../../../src/renderer/store/connectionSlice';
+} from '@renderer/store/connectionSlice';
 
 describe('connectionSlice', () => {
   const initialState = {
@@ -29,15 +29,23 @@ describe('connectionSlice', () => {
 
   describe('setReconnecting', () => {
     it('should set state to reconnecting and increment attempts', () => {
-      const prev = { state: 'connected' as const, lastConnectedAt: Date.now(), reconnectAttempts: 0 };
+      const prev = {
+        state: 'connected' as const,
+        lastConnectedAt: Date.now(),
+        reconnectAttempts: 0,
+      };
       const next = connectionReducer(prev, setReconnecting());
       expect(next.state).toBe('reconnecting');
       expect(next.reconnectAttempts).toBe(1);
     });
 
     it('should increment attempts on each call', () => {
-      let state = { state: 'connected' as const, lastConnectedAt: Date.now(), reconnectAttempts: 0 };
-      state = connectionReducer(state, setReconnecting());
+      const init = {
+        state: 'connected' as const,
+        lastConnectedAt: Date.now(),
+        reconnectAttempts: 0,
+      };
+      let state = connectionReducer(init, setReconnecting());
       state = connectionReducer(state, setReconnecting());
       state = connectionReducer(state, setReconnecting());
       expect(state.reconnectAttempts).toBe(3);
@@ -46,7 +54,11 @@ describe('connectionSlice', () => {
 
   describe('setOffline', () => {
     it('should set state to offline', () => {
-      const prev = { state: 'reconnecting' as const, lastConnectedAt: Date.now(), reconnectAttempts: 5 };
+      const prev = {
+        state: 'reconnecting' as const,
+        lastConnectedAt: Date.now(),
+        reconnectAttempts: 5,
+      };
       const next = connectionReducer(prev, setOffline());
       expect(next.state).toBe('offline');
     });
@@ -67,7 +79,11 @@ describe('connectionSlice', () => {
     });
 
     it('should handle offline transition', () => {
-      const connected = { state: 'connected' as const, lastConnectedAt: Date.now(), reconnectAttempts: 0 };
+      const connected = {
+        state: 'connected' as const,
+        lastConnectedAt: Date.now(),
+        reconnectAttempts: 0,
+      };
       const next = connectionReducer(connected, setConnectionState('offline'));
       expect(next.state).toBe('offline');
     });

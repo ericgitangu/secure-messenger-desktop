@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import crypto from 'node:crypto';
-import { SecurityService } from '../../../src/main/security/SecurityService';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { SecurityService } from '@main/security/SecurityService';
 
 describe('SecurityService (AES-256-GCM)', () => {
   let service: SecurityService;

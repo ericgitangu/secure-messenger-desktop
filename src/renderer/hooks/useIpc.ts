@@ -11,7 +11,7 @@ import {
 } from '../store/messagesSlice';
 import { updateChatLastMessage, fetchChats, markChatAsRead, selectChat } from '../store/chatsSlice';
 import { bridge } from '../api/bridge';
-import type { ConnectionState } from '../../shared/constants';
+import type { ConnectionState } from '@shared/constants';
 import type { NewMessageEvent } from '../types/models';
 
 export function useIpcListeners() {

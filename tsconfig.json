@@ -17,10 +17,11 @@
       "@/*": ["src/*"],
       "@main/*": ["src/main/*"],
       "@renderer/*": ["src/renderer/*"],
-      "@shared/*": ["src/shared/*"]
+      "@shared/*": ["src/shared/*"],
+      "@server/*": ["src/server/*"]
     },
     "types": ["vitest/globals"]
   },
-  "include": ["src/**/*", "forge.env.d.ts"],
+  "include": ["src/**/*", "tests/**/*", "forge.env.d.ts"],
   "exclude": ["node_modules", "dist", ".vite"]
 }

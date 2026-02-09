@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import { getDb } from '../main/db/schema';
-import { seedDatabase } from '../main/db/seed';
-import { startWsServer } from '../main/ws/server';
+import { getDb } from '@main/db/schema';
+import { seedDatabase } from '@main/db/seed';
+import { startWsServer } from '@main/ws/server';
 import { createApp } from './app';
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);

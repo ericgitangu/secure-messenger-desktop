@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
-import { createTestDb } from '../../../src/main/db/schema';
-import { SecurityService } from '../../../src/main/security/SecurityService';
-import * as queries from '../../../src/main/db/queries';
+import { createTestDb } from '@main/db/schema';
+import { SecurityService } from '@main/security/SecurityService';
+import * as queries from '@main/db/queries';
 
 describe('Database Queries', () => {
   let db: Database.Database;
@@ -13,10 +13,10 @@ describe('Database Queries', () => {
 
     // Seed test data
     const insertChat = db.prepare(
-      'INSERT INTO chats (id, title, lastMessageAt, unreadCount) VALUES (?, ?, ?, ?)'
+      'INSERT INTO chats (id, title, lastMessageAt, unreadCount) VALUES (?, ?, ?, ?)',
     );
     const insertMessage = db.prepare(
-      'INSERT INTO messages (id, chatId, ts, sender, body) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO messages (id, chatId, ts, sender, body) VALUES (?, ?, ?, ?, ?)',
     );
 
     // Create 5 chats
@@ -33,7 +33,7 @@ describe('Database Queries', () => {
           `chat-${i}`,
           1000 + i * 100 + j * 10,
           `Sender${j % 3}`,
-          body
+          body,
         );
       }
     }

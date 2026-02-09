@@ -1,21 +1,21 @@
 import path from 'node:path';
 import { app, BrowserWindow, ipcMain, session } from 'electron';
 import started from 'electron-squirrel-startup';
-import { getDb, closeDb } from './main/db/schema';
-import { seedDatabase } from './main/db/seed';
-import * as queries from './main/db/queries';
+import { getDb, closeDb } from '@main/db/schema';
+import { seedDatabase } from '@main/db/seed';
+import * as queries from '@main/db/queries';
 import {
   startWsServer,
   stopWsServer,
   simulateDisconnect as serverSimulateDisconnect,
-} from './main/ws/server';
+} from '@main/ws/server';
 import {
   connect as clientConnect,
   disconnect as clientDisconnect,
   simulateDisconnect as clientSimulateDisconnect,
-} from './main/ws/client';
-import { IPC_CHANNELS } from './shared/constants';
-import { createApp } from './server/app';
+} from '@main/ws/client';
+import { IPC_CHANNELS } from '@shared/constants';
+import { createApp } from '@server/app';
 
 if (started) {
   app.quit();

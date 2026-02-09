@@ -1,9 +1,9 @@
 import path from 'node:path';
 import express from 'express';
-import { getChats, markChatRead, getMessages, searchMessages } from '../main/db/queries';
-import { seedDatabase } from '../main/db/seed';
-import { getMetricsText } from '../main/metrics/MetricsCollector';
-import { simulateDisconnect } from '../main/ws/server';
+import { getChats, markChatRead, getMessages, searchMessages } from '@main/db/queries';
+import { seedDatabase } from '@main/db/seed';
+import { getMetricsText } from '@main/metrics/MetricsCollector';
+import { simulateDisconnect } from '@main/ws/server';
 import type Database from 'better-sqlite3';
 
 export function createApp(db: Database.Database): express.Application {
