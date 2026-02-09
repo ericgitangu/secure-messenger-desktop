@@ -56,12 +56,14 @@ export class SecurityService {
 
   private static getKeyPath(): string {
     try {
-      const { app } = require('electron');
-      return path.join(app.getPath('userData'), '.encryption-key');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const electron = require('electron') as { app?: { getPath?: (name: string) => string } };
+      const userDataPath = electron.app?.getPath?.('userData');
+      if (userDataPath) return path.join(userDataPath, '.encryption-key');
     } catch {
       // Outside Electron (tests, scripts)
-      return path.join(process.cwd(), '.data', '.encryption-key');
     }
+    return path.join(process.cwd(), '.data', '.encryption-key');
   }
 
   private static loadOrGenerateKey(): Buffer {
@@ -100,10 +102,7 @@ export class SecurityService {
       authTagLength: AUTH_TAG_LENGTH,
     });
 
-    const encrypted = Buffer.concat([
-      cipher.update(plaintext, 'utf-8'),
-      cipher.final(),
-    ]);
+    const encrypted = Buffer.concat([cipher.update(plaintext, 'utf-8'), cipher.final()]);
 
     const authTag = cipher.getAuthTag();
 
@@ -138,10 +137,7 @@ export class SecurityService {
     });
     decipher.setAuthTag(authTag);
 
-    const decrypted = Buffer.concat([
-      decipher.update(encrypted),
-      decipher.final(),
-    ]);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
 
     return decrypted.toString('utf-8');
   }
