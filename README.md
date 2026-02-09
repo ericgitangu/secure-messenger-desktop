@@ -553,14 +553,21 @@ Error: Could not resolve "bufferutil" imported by "ws". Is it installed?
 
 ### Comprehensive Test Suite
 
-| Type             | Tests   | Coverage                                                            |
-| ---------------- | ------- | ------------------------------------------------------------------- |
-| Unit (Security)  | 16      | AES-256-GCM round-trip, tamper detection, wrong key, batch, unicode |
-| Unit (DB)        | 26      | Pagination, search, seeding, FK constraints, indexes                |
-| Unit (Store)     | 21      | All reducers, state machine transitions, action creators            |
-| Integration (WS) | 4       | Server → client → DB round-trip, message persistence                |
-| Contract (Pact)  | 14      | WS event schema validation, discriminated unions                    |
-| **Total**        | **81+** |                                                                     |
+| Type             | Tests  | Coverage                                                            |
+| ---------------- | ------ | ------------------------------------------------------------------- |
+| Unit (Security)  | 16     | AES-256-GCM round-trip, tamper detection, wrong key, batch, unicode |
+| Unit (DB)        | 26     | Pagination, search, seeding, FK constraints, indexes                |
+| Unit (Store)     | 21     | All reducers, state machine transitions, action creators            |
+| Integration (WS) | 4      | Server → client → DB round-trip, message persistence                |
+| Contract (Pact)  | 14     | WS event schema validation, discriminated unions                    |
+| **Total**        | **81** |                                                                     |
+
+**Verified results committed to repo:**
+
+- [`test-results-junit.xml`](test-results-junit.xml) — JUnit XML (81 tests, 0 failures)
+- [`test-coverage.json`](test-coverage.json) — Istanbul/V8 coverage data (JSON)
+
+Run locally: `pnpm test` (all tests) · `pnpm test:coverage` (with coverage report)
 
 ### Voice Search (Web Speech API)
 
