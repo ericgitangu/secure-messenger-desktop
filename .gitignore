@@ -28,6 +28,7 @@ logs/
 
 # ─── Test Artifacts ───
 coverage/
+test-results/
 *.lcov
 pacts/
 

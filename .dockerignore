@@ -1,9 +1,54 @@
+# ─── Dependencies (2.6GB — reinstalled in container) ───
 node_modules
+
+# ─── Version control ───
 .git
-.data
+.github
+.husky
+
+# ─── Build artifacts (rebuilt in container) ───
 dist
-coverage
-*.log
-.DS_Store
-.vite
 out
+.vite
+*.tsbuildinfo
+
+# ─── Data / secrets ───
+.data
+*.db
+*.sqlite
+*.key
+.env
+.env.*
+
+# ─── Test artifacts ───
+coverage
+test-results
+test-results-junit.xml
+test-coverage.json
+pacts
+*.lcov
+
+# ─── Logs ───
+*.log
+logs
+
+# ─── OS / IDE ───
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+*.swp
+*.swo
+
+# ─── Package manager cache ───
+.npm
+.eslintcache
+*.tgz
+
+# ─── Docker (don't send compose into build context) ───
+docker-compose*.yml
+fly.toml
+
+# ─── Docs not needed in image ───
+CHANGELOG.md
+LICENSE
