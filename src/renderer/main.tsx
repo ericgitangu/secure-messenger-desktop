@@ -5,6 +5,7 @@ import { store } from './store';
 import { AppThemeProvider } from './theme/ThemeProvider';
 import { SnackbarProvider } from './components/SnackbarProvider';
 import { App } from './App';
+import { initBridge } from './api/bridge';
 
 import '@fontsource-variable/plus-jakarta-sans';
 import '@fontsource/inter/400.css';
@@ -14,16 +15,22 @@ import '@fontsource/inter/700.css';
 import '@fontsource/roboto-mono/400.css';
 import '@fontsource/roboto-mono/500.css';
 
-const root = createRoot(document.getElementById('app')!);
+async function bootstrap() {
+  await initBridge();
 
-root.render(
-  <StrictMode>
-    <Provider store={store}>
-      <AppThemeProvider>
-        <SnackbarProvider>
-          <App />
-        </SnackbarProvider>
-      </AppThemeProvider>
-    </Provider>
-  </StrictMode>
-);
+  const root = createRoot(document.getElementById('app')!);
+
+  root.render(
+    <StrictMode>
+      <Provider store={store}>
+        <AppThemeProvider>
+          <SnackbarProvider>
+            <App />
+          </SnackbarProvider>
+        </AppThemeProvider>
+      </Provider>
+    </StrictMode>,
+  );
+}
+
+bootstrap();

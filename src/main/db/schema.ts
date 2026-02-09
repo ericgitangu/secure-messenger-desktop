@@ -1,11 +1,27 @@
-import Database from 'better-sqlite3';
 import path from 'node:path';
-import { app } from 'electron';
+import fs from 'node:fs';
+import Database from 'better-sqlite3';
 
 let db: Database.Database | null = null;
 
+function getElectronUserDataPath(): string | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const electron = require('electron') as { app?: { getPath?: (name: string) => string } };
+    return electron.app?.getPath?.('userData') ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function getDbPath(): string {
-  const userDataPath = app?.getPath?.('userData') ?? path.join(process.cwd(), '.data');
+  if (process.env.DB_PATH) {
+    return process.env.DB_PATH;
+  }
+  const userDataPath = getElectronUserDataPath() ?? path.join(process.cwd(), '.data');
+  if (!fs.existsSync(userDataPath)) {
+    fs.mkdirSync(userDataPath, { recursive: true });
+  }
   return path.join(userDataPath, 'messenger.db');
 }
 

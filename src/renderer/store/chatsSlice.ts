@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { Chat } from '../types/models';
 import { CHATS_PAGE_SIZE } from '../../shared/constants';
+import { bridge } from '../api/bridge';
+import type { Chat } from '../types/models';
 
 interface ChatsState {
   items: Chat[];
@@ -18,31 +19,22 @@ const initialState: ChatsState = {
   offset: 0,
 };
 
-export const fetchChats = createAsyncThunk(
-  'chats/fetch',
-  async (_, { getState }) => {
-    const state = getState() as { chats: ChatsState };
-    const chats = await window.electronAPI.getChats(state.chats.offset, CHATS_PAGE_SIZE);
-    return chats;
-  }
-);
+export const fetchChats = createAsyncThunk('chats/fetch', async (_, { getState }) => {
+  const state = getState() as { chats: ChatsState };
+  const chats = await bridge().getChats(state.chats.offset, CHATS_PAGE_SIZE);
+  return chats;
+});
 
-export const loadMoreChats = createAsyncThunk(
-  'chats/loadMore',
-  async (_, { getState }) => {
-    const state = getState() as { chats: ChatsState };
-    const chats = await window.electronAPI.getChats(state.chats.offset, CHATS_PAGE_SIZE);
-    return chats;
-  }
-);
+export const loadMoreChats = createAsyncThunk('chats/loadMore', async (_, { getState }) => {
+  const state = getState() as { chats: ChatsState };
+  const chats = await bridge().getChats(state.chats.offset, CHATS_PAGE_SIZE);
+  return chats;
+});
 
-export const markChatAsRead = createAsyncThunk(
-  'chats/markRead',
-  async (chatId: string) => {
-    await window.electronAPI.markChatRead(chatId);
-    return chatId;
-  }
-);
+export const markChatAsRead = createAsyncThunk('chats/markRead', async (chatId: string) => {
+  await bridge().markChatRead(chatId);
+  return chatId;
+});
 
 export const chatsSlice = createSlice({
   name: 'chats',
@@ -53,7 +45,7 @@ export const chatsSlice = createSlice({
     },
     updateChatLastMessage(
       state,
-      action: PayloadAction<{ chatId: string; ts: number; incrementUnread: boolean }>
+      action: PayloadAction<{ chatId: string; ts: number; incrementUnread: boolean }>,
     ) {
       const { chatId, ts, incrementUnread } = action.payload;
       const chat = state.items.find((c) => c.id === chatId);

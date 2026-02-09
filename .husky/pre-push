@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+
+# ============================================================================
+# Pre-push hook: ensure we're always ready with up-to-date built code.
+#
+# 1. Detect which files changed since the remote tracking branch
+# 2. If source files changed → rebuild web artifacts
+# 3. Run fast test suite to catch regressions
+# ============================================================================
+
+echo "[pre-push] Checking for changes that need a rebuild..."
+
+# Get the upstream ref to diff against
+UPSTREAM=$(git rev-parse --abbrev-ref @{upstream} 2>/dev/null || echo "origin/main")
+MERGE_BASE=$(git merge-base HEAD "$UPSTREAM" 2>/dev/null || echo "HEAD~1")
+
+# Files changed since we diverged from upstream
+CHANGED_FILES=$(git diff --name-only "$MERGE_BASE"..HEAD 2>/dev/null || echo "")
+
+# Check if any source files changed
+SRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^src/' || true)
+CONFIG_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^(vite\.|tsconfig|package\.json)' || true)
+DOCKER_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^(Dockerfile|docker-compose|docker/)' || true)
+
+if [ -n "$SRC_CHANGED" ] || [ -n "$CONFIG_CHANGED" ]; then
+  echo "[pre-push] Source/config files changed. Rebuilding web artifacts..."
+  pnpm build:web || {
+    echo "[pre-push] Build failed! Fix build errors before pushing."
+    exit 1
+  }
+  echo "[pre-push] Web build succeeded."
+fi
+
+if [ -n "$DOCKER_CHANGED" ]; then
+  echo "[pre-push] Docker files changed. Validating compose configs..."
+  docker compose config --quiet 2>/dev/null || {
+    echo "[pre-push] WARNING: docker-compose.yml validation failed."
+    # Non-blocking — don't prevent push for Docker config issues
+  }
+  docker compose -f docker-compose.native.yml config --quiet 2>/dev/null || {
+    echo "[pre-push] WARNING: docker-compose.native.yml validation failed."
+  }
+fi
+
+# Run fast tests
+echo "[pre-push] Running tests..."
+pnpm test || {
+  echo "[pre-push] Tests failed! Fix test failures before pushing."
+  exit 1
+}
+
+echo "[pre-push] All pre-push checks passed."
