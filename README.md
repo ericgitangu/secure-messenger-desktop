@@ -1,11 +1,19 @@
 # Secure Messenger Desktop — Chat List + Sync Simulator
 
 [![CI](https://github.com/ericgitangu/secure-messenger-desktop/actions/workflows/ci.yml/badge.svg)](https://github.com/ericgitangu/secure-messenger-desktop/actions/workflows/ci.yml)
+[![Deploy](https://img.shields.io/badge/Fly.io-Live-8B5CF6.svg)](https://secure-messenger-desktop.fly.dev/)
+[![Tests](https://img.shields.io/badge/Tests-81%20passed-brightgreen.svg)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Electron](https://img.shields.io/badge/Electron-40-47848F.svg)](https://www.electronjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Redux](https://img.shields.io/badge/Redux_Toolkit-2.5-764ABC.svg)](https://redux-toolkit.js.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57.svg)](https://www.sqlite.org/)
 [![AES-256-GCM](https://img.shields.io/badge/Encryption-AES--256--GCM-critical.svg)]()
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](https://docs.docker.com/compose/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C.svg)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800.svg)](https://grafana.com/)
+[![pnpm](https://img.shields.io/badge/pnpm-10.x-F69220.svg)](https://pnpm.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > Technical assessment: Electron + React + TypeScript secure messenger client with real-time sync, virtualized lists, and AES-256-GCM encryption.
 
@@ -14,6 +22,13 @@
 ### Live Demo
 
 **[secure-messenger-desktop.fly.dev](https://secure-messenger-desktop.fly.dev/)** — Browser mode deployed on Fly.io (Frankfurt region). Same React UI as the native Electron app, powered by Express + WebSocket on a single port.
+
+**Try it now:**
+
+- Create new chats (pen icon in sidebar)
+- Send messages (input bar at bottom)
+- Watch real-time streaming messages arrive
+- Click the **System Health** indicator in the header to see the built-in monitoring dashboard with live Prometheus metrics, charts, and resource usage
 
 ---
 
@@ -37,8 +52,8 @@
 git clone https://github.com/ericgitangu/secure-messenger-desktop.git
 cd secure-messenger-desktop
 pnpm install
-pnpm dev          # Launch Electron app with seeded data
-pnpm test         # Run 80+ tests (unit, integration, contract)
+pnpm dev          # Launch Electron app (auto-rebuilds native modules)
+pnpm test         # Run 81 tests (auto-rebuilds native modules for Node.js)
 pnpm lint         # ESLint (strict: no-any, React perf rules)
 pnpm make         # Build for production (macOS/Windows/Linux)
 ```
@@ -117,17 +132,19 @@ pnpm docker:native:down   # Stop the Docker services
 
 ### All Available Scripts
 
-| Script               | Description                                  |
-| -------------------- | -------------------------------------------- |
-| `pnpm dev`           | Launch native Electron app                   |
-| `pnpm start:full`    | Electron + Prometheus + Grafana (full stack) |
-| `pnpm server:dev`    | Browser mode: Vite dev + Express API         |
-| `pnpm build:web`     | Build SPA + server for production            |
-| `pnpm docker:up`     | Docker Compose: app + Prometheus + Grafana   |
-| `pnpm docker:down`   | Tear down Docker stack                       |
-| `pnpm docker:native` | Start only Prometheus + Grafana in Docker    |
-| `pnpm test`          | Run test suite                               |
-| `pnpm lint`          | ESLint                                       |
+| Script               | Description                                                      |
+| -------------------- | ---------------------------------------------------------------- |
+| `pnpm dev`           | Launch native Electron app (auto-rebuilds native modules)        |
+| `pnpm start:full`    | Electron + Prometheus + Grafana (full stack)                     |
+| `pnpm server:dev`    | Browser mode: Vite dev + Express API                             |
+| `pnpm build:web`     | Build SPA + server for production                                |
+| `pnpm docker:up`     | Docker Compose: app + Prometheus + Grafana                       |
+| `pnpm docker:down`   | Tear down Docker stack                                           |
+| `pnpm docker:native` | Start only Prometheus + Grafana in Docker                        |
+| `pnpm test`          | Run 81 tests (auto-rebuilds native modules for Node.js)          |
+| `pnpm test:coverage` | Run tests with Istanbul/V8 coverage report                       |
+| `pnpm lint`          | ESLint (strict: no-any, React perf rules)                        |
+| `pnpm make`          | Build platform binaries (macOS/Windows/Linux via Electron Forge) |
 
 ### Git Hooks
 
@@ -163,7 +180,7 @@ All test and coverage artifacts are generated in the pipeline and downloadable f
 ```mermaid
 graph TB
     subgraph "Electron Main Process"
-        WS_SERVER[/"WS Server<br/>ws://localhost:9876"/]
+        WS_SERVER[/"WS Server<br/>ws://localhost/ws"/]
         WS_CLIENT["WS Client<br/>+ Heartbeat<br/>+ Exp. Backoff"]
         DB["SQLite<br/>(better-sqlite3)<br/>WAL Mode"]
         SEC["SecurityService<br/>AES-256-GCM"]
@@ -368,37 +385,61 @@ graph LR
 
 ---
 
-## System Health Dashboard
+## System Health Dashboard & Built-in Monitoring
 
-The header includes a **System Health Indicator** (healthy/degraded/unhealthy) that opens a full monitoring dashboard when clicked:
+The header includes a **System Health Indicator** (healthy/degraded/unhealthy) that opens a full Grafana-style monitoring dashboard — **no external tools required**. The dashboard works on the [live Fly.io deployment](https://secure-messenger-desktop.fly.dev/) and locally.
 
-### Metrics Collected
+### Client-Side Metrics (Real-time)
 
-- **WebSocket Latency:** Round-trip time to WS server
-- **Database Latency:** SQLite query response time
-- **IPC Round-trip:** Main ↔ renderer IPC latency
-- **Throughput:** Messages/second, queries/second
-- **Reconnect Count:** WebSocket reconnection attempts
-- **Encryption:** AES-256-GCM status indicator
+| Metric            | Source                          | Visualization                 |
+| ----------------- | ------------------------------- | ----------------------------- |
+| WebSocket Latency | Bridge round-trip timing        | Line chart + metric card      |
+| Database Latency  | Bridge round-trip timing        | Line chart + metric card      |
+| IPC Round-trip    | Bridge round-trip timing        | Line chart + metric card      |
+| Messages/second   | Redux state delta               | Area chart                    |
+| Queries/second    | Local counter delta             | Area chart                    |
+| Reconnect Count   | Redux connection state          | Metric card                   |
+| Service Status    | Latency thresholds (mode-aware) | Status grid with health chips |
 
-### Prometheus Integration
+### Server-Side Metrics (Prometheus — Live Polling)
 
-Metrics are collected via `prom-client` in the main process:
+The dashboard polls the `/metrics` endpoint every 5 seconds and visualizes server-side Prometheus data directly in the app:
 
-- `messenger_messages_received_total` (Counter)
-- `messenger_db_query_duration_seconds` (Histogram)
-- `messenger_ipc_call_duration_seconds` (Histogram)
-- `messenger_ws_connection_state` (Gauge)
-- `messenger_encryption_operations_total` (Counter)
+| Metric                                  | Type      | Visualization                                     |
+| --------------------------------------- | --------- | ------------------------------------------------- |
+| `messenger_messages_received_total`     | Counter   | Metric card (total)                               |
+| `messenger_messages_stored_total`       | Counter   | Metric card (total) + throughput area chart       |
+| `messenger_ws_connection_state`         | Gauge     | Status indicator (Connected/Reconnecting/Offline) |
+| `messenger_ws_active_connections`       | Gauge     | Metric card (active clients)                      |
+| `messenger_encryption_operations_total` | Counter   | Metric card (total encrypt/decrypt ops)           |
+| `messenger_db_query_duration_seconds`   | Histogram | Exposed via /metrics for Grafana                  |
+| `messenger_ipc_call_duration_seconds`   | Histogram | Exposed via /metrics for Grafana                  |
+| `messenger_db_row_count`                | Gauge     | Horizontal bar chart (chats vs messages)          |
+| `process_resident_memory_bytes`         | Gauge     | Progress bar (RSS memory)                         |
+| `nodejs_heap_size_used_bytes`           | Gauge     | Progress bar (heap usage)                         |
+| `nodejs_eventloop_lag_seconds`          | Gauge     | Progress bar (event loop lag)                     |
+| `process_cpu_user_seconds_total`        | Counter   | Metric card (CPU time)                            |
 
-### Visualization
+### External Grafana (Docker Compose)
 
-Recharts-powered dashboard with:
+For advanced visualization, the Docker Compose stack provides full Prometheus + Grafana:
 
-- Real-time latency line chart (WS/DB/IPC)
-- Throughput area chart (messages/s, queries/s)
-- Service status grid with per-service health indicators
-- Metric cards for key performance indicators
+```bash
+docker compose up --build    # App + Prometheus + Grafana
+# Open http://localhost:3001 → Dashboards → Secure Messenger
+```
+
+12-panel auto-provisioned dashboard with percentile histograms, rate calculations, and Node.js runtime metrics.
+
+### Raw Metrics Endpoint
+
+The `/metrics` endpoint is available on all deployments for external monitoring tools:
+
+| Environment | URL                                              |
+| ----------- | ------------------------------------------------ |
+| Fly.io      | https://secure-messenger-desktop.fly.dev/metrics |
+| Docker      | http://localhost:3000/metrics                    |
+| Electron    | http://localhost:3000/metrics                    |
 
 ---
 
@@ -470,28 +511,57 @@ With more time, semantic search via embeddings:
 
 ## Functional Requirements Checklist
 
-| Requirement                   | Status | Implementation                                        |
-| ----------------------------- | ------ | ----------------------------------------------------- |
-| **A) SQLite local storage**   | Done   | `better-sqlite3` with WAL mode                        |
-| Schema (chats + messages)     | Done   | 2-table 3NF design with FK constraints                |
-| Seed 200 chats + 20K messages | Done   | Transaction-wrapped seeding, idempotent               |
-| Chat list with pagination     | Done   | `ORDER BY lastMessageAt DESC LIMIT ? OFFSET ?`        |
-| Message pagination            | Done   | Cursor-based `WHERE ts < ? ORDER BY ts DESC LIMIT 50` |
-| Basic search (substring)      | Done   | Debounced, 3+ chars, decrypt-then-filter              |
-| **B) WebSocket sync**         | Done   | `ws` server emits every 1-3s                          |
-| Event format                  | Done   | `{ chatId, messageId, ts, sender, body }`             |
-| Write to DB + update UI       | Done   | WS Client → SQLite → IPC → Redux → React              |
-| **C) Connection Health**      | Done   | 3-state machine with exponential backoff              |
-| State indicator               | Done   | MUI Chip (Connected/Reconnecting/Offline)             |
-| Heartbeat                     | Done   | Ping every 5s, timeout 10s                            |
-| Exponential backoff           | Done   | 1s → 30s max, 10 retries                              |
-| Simulate disconnect           | Done   | Button in header, terminates WS connections           |
-| **D) UI Performance**         | Done   | Virtualized chat list + message list                  |
-| Unread count + mark read      | Done   | Badge component, mark on chat selection               |
-| Load older messages           | Done   | "Load older" button + `startReached` in Virtuoso      |
-| **E) User Actions**           | Done   | Create chat + send message                            |
-| Create new chat               | Done   | Compose button in sidebar, `POST /api/chats`          |
-| Send message                  | Done   | Input bar + send button, AES-256-GCM encrypted        |
+| #   | Requirement                     | Status | Implementation                                                                            |
+| --- | ------------------------------- | ------ | ----------------------------------------------------------------------------------------- |
+|     | **A) SQLite Local Storage**     |        |                                                                                           |
+| 1   | Schema (chats + messages)       | Done   | 2-table 3NF design with FK constraints, composite indexes                                 |
+| 2   | Seed 200 chats + 20K messages   | Done   | Transaction-wrapped seeding, idempotent, AES-256-GCM encrypted bodies                     |
+| 3   | Chat list with pagination       | Done   | `ORDER BY lastMessageAt DESC LIMIT ? OFFSET ?` + infinite scroll                          |
+| 4   | Message pagination              | Done   | Cursor-based `WHERE ts < ? ORDER BY ts DESC LIMIT 50`                                     |
+| 5   | Basic search (substring)        | Done   | Debounced (300ms, 3+ chars), decrypt-then-filter, voice search via Web Speech API         |
+| 6   | WAL mode + indexes              | Done   | WAL for concurrent reads, 3 targeted indexes (see [Schema](#sqlite-schema--optimization)) |
+|     | **B) WebSocket Sync**           |        |                                                                                           |
+| 7   | Real-time message streaming     | Done   | `ws` server emits every 1-3s, single-port `/ws` path in web mode                          |
+| 8   | Event format                    | Done   | `{ chatId, messageId, ts, sender, body }` — validated by Pact contract tests              |
+| 9   | Write to DB + update UI         | Done   | WS Client → encrypt → SQLite → IPC → Redux → Virtuoso (unidirectional flow)               |
+|     | **C) Connection Health**        |        |                                                                                           |
+| 10  | 3-state connection machine      | Done   | Connected → Reconnecting → Offline, implemented as Redux slice                            |
+| 11  | Visual state indicator          | Done   | MUI Chip with color-coded icons (Wifi/WifiOff/Loader2)                                    |
+| 12  | Heartbeat monitoring            | Done   | Ping every 5s, timeout at 10s, auto-reconnect on failure                                  |
+| 13  | Exponential backoff             | Done   | 1s → 2s → 4s → 8s → ... → 30s max, 10 retries max                                         |
+| 14  | Simulate disconnect             | Done   | Header button terminates all WS connections for testing recovery                          |
+|     | **D) UI Performance**           |        |                                                                                           |
+| 15  | Chat list virtualization        | Done   | `react-window` `FixedSizeList` — renders only visible rows (~8-10 of 200)                 |
+| 16  | Message list virtualization     | Done   | `react-virtuoso` `Virtuoso` — variable height, bi-directional scroll, `followOutput`      |
+| 17  | Unread count + mark read        | Done   | MUI Badge component, auto-mark on chat selection                                          |
+| 18  | Load older messages             | Done   | "Load older" button + `startReached` callback in Virtuoso                                 |
+| 19  | Minimal re-renders              | Done   | `React.memo` on ChatRow/MessageBubble, `useCallback` + `useMemo` throughout               |
+|     | **E) User Actions**             |        |                                                                                           |
+| 20  | Create new chat                 | Done   | Compose button (pen icon) in sidebar → inline TextField → Enter to create                 |
+| 21  | Send message in chat            | Done   | Input bar + send button at bottom of message view, Enter to send                          |
+| 22  | Messages encrypted on send      | Done   | User-sent messages are AES-256-GCM encrypted before SQLite storage                        |
+|     | **F) Security**                 |        |                                                                                           |
+| 23  | AES-256-GCM encryption          | Done   | 256-bit key, 96-bit IV, 128-bit auth tag — real crypto, not a placeholder                 |
+| 24  | Tamper detection                | Done   | GCM auth tag verification, tampered ciphertext is rejected                                |
+| 25  | Process isolation               | Done   | `contextIsolation: true`, `nodeIntegration: false`, typed `contextBridge` only            |
+| 26  | No plaintext leaks              | Done   | `no-console` ESLint rule, all DB reads through `SecurityService.decrypt()`                |
+|     | **G) Observability**            |        |                                                                                           |
+| 27  | System health dashboard         | Done   | Header indicator → click-to-expand Grafana-style modal with two-tier monitoring           |
+| 28  | Prometheus metrics              | Done   | `prom-client` counters, histograms, gauges — instrumented across WS, DB, encryption       |
+| 29  | Built-in metrics visualization  | Done   | Polls `/metrics` endpoint live; renders counters, bar charts, area charts, progress bars  |
+| 30  | Grafana dashboards (Docker)     | Done   | 12-panel auto-provisioned dashboard via Docker Compose                                    |
+| 31  | Real-time charts                | Done   | Recharts latency + throughput + server throughput + DB row counts, mode-aware thresholds  |
+|     | **H) Testing**                  |        |                                                                                           |
+| 31  | Unit tests                      | Done   | 63 tests: Security (16), DB queries (19), DB seed (7), Redux slices (21)                  |
+| 32  | Integration tests               | Done   | 4 tests: WS Server → Client → SQLite round-trip                                           |
+| 33  | Contract tests                  | Done   | 14 Pact tests: WS event schema validation, discriminated unions                           |
+| 34  | CI/CD pipeline                  | Done   | GitHub Actions: Lint → Test (JUnit XML + coverage) → Build (macOS/Windows/Linux)          |
+|     | **I) DevOps & Deployment**      |        |                                                                                           |
+| 35  | Docker Compose full stack       | Done   | App + Prometheus + Grafana, single `docker compose up`                                    |
+| 36  | Fly.io live deployment          | Done   | [secure-messenger-desktop.fly.dev](https://secure-messenger-desktop.fly.dev/)             |
+| 37  | Automated native module rebuild | Done   | `scripts/ensure-native.sh` with lifecycle hooks (predev/pretest/premake)                  |
+| 38  | Git hooks (pre-commit/pre-push) | Done   | lint-staged + gitleaks + tsc + commitlint + test + auto-rebuild                           |
+| 39  | Dependabot                      | Done   | Automated pnpm dependency updates via `.github/dependabot.yml`                            |
 
 ---
 
@@ -541,6 +611,41 @@ Error: Could not resolve "bufferutil" imported by "ws". Is it installed?
 
 ---
 
+## Deployment
+
+### Fly.io (Production)
+
+The app is deployed to Fly.io Frankfurt region as a single-container service:
+
+```bash
+flyctl deploy          # Deploy from local (uses Dockerfile)
+```
+
+| URL                                                                           | Purpose               |
+| ----------------------------------------------------------------------------- | --------------------- |
+| [secure-messenger-desktop.fly.dev](https://secure-messenger-desktop.fly.dev/) | React SPA + REST API  |
+| `wss://secure-messenger-desktop.fly.dev/ws`                                   | WebSocket (same port) |
+
+The WebSocket server attaches to the HTTP server on the `/ws` path, enabling single-port deployments compatible with Fly.io, Render, Railway, and other PaaS providers.
+
+### Automated Native Module Rebuild
+
+`better-sqlite3` is a native C++ addon that must be compiled for the correct runtime:
+
+- **Electron** uses `NODE_MODULE_VERSION 143` (Node 22 fork)
+- **Node.js** uses `NODE_MODULE_VERSION 141`
+
+The `scripts/ensure-native.sh` script tracks the current build target via a marker file (`node_modules/.native-target`) and only rebuilds when switching targets:
+
+```bash
+# Automatic via lifecycle scripts — no manual intervention needed:
+pnpm dev          # → predev rebuilds for Electron
+pnpm test         # → pretest rebuilds for Node.js
+pnpm make         # → premake rebuilds for Electron
+```
+
+---
+
 ## What I'd Improve With More Time
 
 1. **FTS5 full-text search** — Replace decrypt-then-filter with SQLite FTS5 for sub-ms search
@@ -557,20 +662,46 @@ Error: Could not resolve "bufferutil" imported by "ws". Is it installed?
 
 ---
 
-## Bonus Implementations
+## Beyond the Requirements
+
+### Create Chat & Send Message (Full End-to-End)
+
+Both features are wired through the entire stack — not just UI stubs:
+
+```
+UI Component → Redux Thunk → Bridge API → IPC/HTTP → DB Query → SQLite
+```
+
+- **Create chat:** Compose button (pen icon) in sidebar header → inline text field → `POST /api/chats` → Redux unshifts new chat to list
+- **Send message:** Input bar at bottom of message view → `POST /api/messages` → AES-256-GCM encrypt → SQLite INSERT → chat list re-sorts by `lastMessageAt`
+- Both work identically in Electron (IPC) and browser (REST API) modes via the bridge abstraction
 
 ### AES-256-GCM Encryption (Real, Not Placeholder)
 
-- 256-bit key, 96-bit random IV, 128-bit auth tag
-- Tamper detection via GCM authentication
-- 16 security-specific tests including wrong-key and tamper detection
+- 256-bit key, 96-bit random IV, 128-bit auth tag per message
+- Tamper detection via GCM authentication — tampered ciphertext rejected
+- User-sent messages are encrypted before storage (same path as streaming messages)
+- 16 security-specific tests including wrong-key, tamper detection, unicode, and batch operations
 
-### System Health Dashboard
+### Built-in Monitoring Dashboard (No External Tools Required)
 
-- Header indicator (Healthy/Degraded/Unhealthy) with click-to-expand modal
-- Real-time latency charts (WS, DB, IPC) via recharts
-- Throughput visualization, service status grid, metric cards
-- Prometheus-compatible metrics via prom-client
+- Header indicator (Healthy/Degraded/Unhealthy) with click-to-expand Grafana-style modal
+- **Two-tier monitoring:** Client-side latency/throughput charts + live server-side Prometheus metrics
+- Server metrics section polls `/metrics` every 5s and renders: message counters, DB row counts (bar chart), server throughput (area chart), resource usage (progress bars for memory, heap, event loop lag)
+- **Mode-aware thresholds:** Electron IPC (<50ms DB, <200ms IPC) vs web mode (<500ms DB, <800ms IPC)
+- Works on the **live Fly.io deployment** — no Grafana/Prometheus infrastructure needed
+- Full Grafana + Prometheus stack available via Docker Compose for advanced analysis
+
+### Dual-Mode Architecture (Electron + Browser)
+
+The same React UI works in both modes via a runtime bridge abstraction:
+
+| Feature       | Electron Mode                | Browser Mode                       |
+| ------------- | ---------------------------- | ---------------------------------- |
+| Data fetching | `ipcRenderer.invoke()`       | `fetch()` REST API                 |
+| WebSocket     | Direct `ws://localhost:9876` | `wss://host/ws` (same port)        |
+| DB access     | Main process (direct)        | Express API (HTTP)                 |
+| Encryption    | Main process                 | Server-side (same SecurityService) |
 
 ### Comprehensive Test Suite
 
@@ -601,10 +732,18 @@ Run locally: `pnpm test` (all tests) · `pnpm test:coverage` (with coverage repo
 - Debounced integration (300ms, 3+ chars)
 - Animated mic icon (lucide Mic/Loader2)
 
-### Production Git Hooks
+### Live Deployment (Fly.io)
+
+- Single-container deployment on Fly.io Frankfurt region
+- WebSocket on `/ws` path (same port as HTTP) — compatible with PaaS reverse proxies
+- Auto-scales with Fly.io Machines
+
+### Production Git Hooks & Automation
 
 - **pre-commit:** lint-staged + gitleaks security scan + TypeScript type checking
 - **post-commit:** Fast unit test run
+- **pre-push:** Auto-rebuild web artifacts if source changed
+- **Lifecycle scripts:** Auto-rebuild `better-sqlite3` native addon for correct runtime target
 
 ---
 
