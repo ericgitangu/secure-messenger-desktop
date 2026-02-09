@@ -2,6 +2,7 @@
 import { getDb } from '@main/db/schema';
 import { seedDatabase } from '@main/db/seed';
 import { startWsServer } from '@main/ws/server';
+import { updateDbRowCounts } from '@main/db/queries';
 import { createApp } from './app';
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
@@ -29,6 +30,10 @@ function main(): void {
   // Attach WebSocket to the HTTP server (same port — required for fly.io / single-port deploys)
   startWsServer(db, { server });
   console.log(`[server] WebSocket attached to HTTP server on :${PORT}`);
+
+  // Set initial DB row counts and refresh every 10 seconds
+  updateDbRowCounts(db);
+  setInterval(() => updateDbRowCounts(db), 10_000);
 }
 
 main();

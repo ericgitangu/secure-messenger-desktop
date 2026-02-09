@@ -9,7 +9,7 @@ import {
   searchMessages,
 } from '@main/db/queries';
 import { seedDatabase } from '@main/db/seed';
-import { getMetricsText } from '@main/metrics/MetricsCollector';
+import { getMetricsText, ipcCallDuration } from '@main/metrics/MetricsCollector';
 import { simulateDisconnect } from '@main/ws/server';
 import type Database from 'better-sqlite3';
 
@@ -21,20 +21,25 @@ export function createApp(db: Database.Database): express.Application {
   // --- REST API ---
 
   app.get('/api/chats', (req, res) => {
+    const end = ipcCallDuration.startTimer({ channel: 'getChats' });
     const offset = parseInt(req.query.offset as string) || 0;
     const limit = parseInt(req.query.limit as string) || 50;
     const chats = getChats(db, offset, limit);
+    end();
     res.json(chats);
   });
 
   app.post('/api/chats', (req, res) => {
+    const end = ipcCallDuration.startTimer({ channel: 'createChat' });
     const { title } = req.body as { title: string };
     if (!title || typeof title !== 'string') {
+      end();
       res.status(400).json({ error: 'title is required' });
       return;
     }
     const id = crypto.randomUUID();
     const chat = createChat(db, id, title.trim());
+    end();
     res.status(201).json(chat);
   });
 
@@ -44,28 +49,35 @@ export function createApp(db: Database.Database): express.Application {
   });
 
   app.get('/api/messages', (req, res) => {
+    const end = ipcCallDuration.startTimer({ channel: 'getMessages' });
     const chatId = req.query.chatId as string;
     const beforeTs = parseInt(req.query.beforeTs as string) || Date.now() + 1;
     const limit = parseInt(req.query.limit as string) || 50;
     const messages = getMessages(db, chatId, beforeTs, limit);
+    end();
     res.json(messages);
   });
 
   app.post('/api/messages', (req, res) => {
+    const end = ipcCallDuration.startTimer({ channel: 'sendMessage' });
     const { chatId, body } = req.body as { chatId: string; body: string };
     if (!chatId || !body || typeof chatId !== 'string' || typeof body !== 'string') {
+      end();
       res.status(400).json({ error: 'chatId and body are required' });
       return;
     }
     const message = sendMessage(db, chatId, body.trim());
+    end();
     res.status(201).json(message);
   });
 
   app.get('/api/messages/search', (req, res) => {
+    const end = ipcCallDuration.startTimer({ channel: 'searchMessages' });
     const chatId = (req.query.chatId as string) || null;
     const query = req.query.query as string;
     const limit = parseInt(req.query.limit as string) || 100;
     const results = searchMessages(db, chatId, query, limit);
+    end();
     res.json(results);
   });
 

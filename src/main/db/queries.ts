@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import Database from 'better-sqlite3';
 import { SecurityService } from '../security/SecurityService';
+import { dbQueryDuration, dbRowCount, encryptionOperations } from '../metrics/MetricsCollector';
 
 export interface ChatRow {
   id: string;
@@ -18,15 +19,20 @@ export interface MessageRow {
 }
 
 export function getChats(db: Database.Database, offset: number, limit: number): ChatRow[] {
+  const end = dbQueryDuration.startTimer({ operation: 'getChats' });
   const stmt = db.prepare(
     'SELECT id, title, lastMessageAt, unreadCount FROM chats ORDER BY lastMessageAt DESC LIMIT ? OFFSET ?',
   );
-  return stmt.all(limit, offset) as ChatRow[];
+  const result = stmt.all(limit, offset) as ChatRow[];
+  end();
+  return result;
 }
 
 export function markChatRead(db: Database.Database, chatId: string): void {
+  const end = dbQueryDuration.startTimer({ operation: 'markChatRead' });
   const stmt = db.prepare('UPDATE chats SET unreadCount = 0 WHERE id = ?');
   stmt.run(chatId);
+  end();
 }
 
 export function getMessages(
@@ -35,16 +41,19 @@ export function getMessages(
   beforeTs: number,
   limit: number,
 ): MessageRow[] {
+  const end = dbQueryDuration.startTimer({ operation: 'getMessages' });
   const security = SecurityService.getInstance();
   const stmt = db.prepare(
     'SELECT id, chatId, ts, sender, body FROM messages WHERE chatId = ? AND ts < ? ORDER BY ts DESC LIMIT ?',
   );
   const rows = stmt.all(chatId, beforeTs, limit) as MessageRow[];
 
-  return rows.map((row) => ({
-    ...row,
-    body: security.decrypt(row.body),
-  }));
+  const result = rows.map((row) => {
+    encryptionOperations.inc({ operation: 'decrypt' });
+    return { ...row, body: security.decrypt(row.body) };
+  });
+  end();
+  return result;
 }
 
 /**
@@ -62,6 +71,7 @@ export function searchMessages(
   query: string,
   limit: number,
 ): MessageRow[] {
+  const end = dbQueryDuration.startTimer({ operation: 'searchMessages' });
   const security = SecurityService.getInstance();
   const lowerQuery = query.toLowerCase();
 
@@ -80,6 +90,7 @@ export function searchMessages(
 
   const results: MessageRow[] = [];
   for (const row of rows) {
+    encryptionOperations.inc({ operation: 'decrypt' });
     const decryptedBody = security.decrypt(row.body);
     if (decryptedBody.toLowerCase().includes(lowerQuery)) {
       results.push({ ...row, body: decryptedBody });
@@ -87,6 +98,7 @@ export function searchMessages(
     }
   }
 
+  end();
   return results;
 }
 
@@ -94,7 +106,9 @@ export function insertMessage(
   db: Database.Database,
   message: { id: string; chatId: string; ts: number; sender: string; body: string },
 ): void {
+  const end = dbQueryDuration.startTimer({ operation: 'insertMessage' });
   const security = SecurityService.getInstance();
+  encryptionOperations.inc({ operation: 'encrypt' });
   const encryptedBody = security.encrypt(message.body);
 
   const insertMsg = db.prepare(
@@ -106,14 +120,17 @@ export function insertMessage(
     'UPDATE chats SET lastMessageAt = MAX(lastMessageAt, ?), unreadCount = unreadCount + 1 WHERE id = ?',
   );
   updateChat.run(message.ts, message.chatId);
+  end();
 }
 
 export function createChat(db: Database.Database, id: string, title: string): ChatRow {
+  const end = dbQueryDuration.startTimer({ operation: 'createChat' });
   const ts = Date.now();
   const stmt = db.prepare(
     'INSERT INTO chats (id, title, lastMessageAt, unreadCount) VALUES (?, ?, ?, 0)',
   );
   stmt.run(id, title, ts);
+  end();
   return { id, title, lastMessageAt: ts, unreadCount: 0 };
 }
 
@@ -123,9 +140,11 @@ export function sendMessage(
   body: string,
   sender = 'You',
 ): MessageRow {
+  const end = dbQueryDuration.startTimer({ operation: 'sendMessage' });
   const security = SecurityService.getInstance();
   const id = crypto.randomUUID();
   const ts = Date.now();
+  encryptionOperations.inc({ operation: 'encrypt' });
   const encryptedBody = security.encrypt(body);
 
   const insertMsg = db.prepare(
@@ -137,8 +156,18 @@ export function sendMessage(
     'UPDATE chats SET lastMessageAt = MAX(lastMessageAt, ?) WHERE id = ?',
   );
   updateChat.run(ts, chatId);
+  end();
 
   return { id, chatId, ts, sender, body };
+}
+
+export function updateDbRowCounts(db: Database.Database): void {
+  const chats = (db.prepare('SELECT COUNT(*) as count FROM chats').get() as { count: number })
+    .count;
+  const messages = (db.prepare('SELECT COUNT(*) as count FROM messages').get() as { count: number })
+    .count;
+  dbRowCount.set({ table: 'chats' }, chats);
+  dbRowCount.set({ table: 'messages' }, messages);
 }
 
 export function getRandomChat(db: Database.Database): ChatRow | undefined {

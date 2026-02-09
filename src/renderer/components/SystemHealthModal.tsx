@@ -7,16 +7,20 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
+import LinearProgress from '@mui/material/LinearProgress';
 import {
   LineChart,
   Line,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
+  Cell,
 } from 'recharts';
 import {
   X,
@@ -31,7 +35,12 @@ import {
   HeartPulse,
   Activity,
   AlertTriangle,
+  Server,
+  Cpu,
+  Lock,
+  Wifi,
 } from 'lucide-react';
+import { usePrometheusMetrics } from '../hooks/usePrometheusMetrics';
 import type { SystemMetrics, HealthLevel } from '../hooks/useSystemHealth';
 
 interface SystemHealthModalProps {
@@ -152,6 +161,225 @@ function ServiceStatus({
         />
       </Box>
     </Box>
+  );
+}
+
+function ServerMetricsSection(): React.JSX.Element {
+  const prom = usePrometheusMetrics();
+
+  if (prom.loading) {
+    return (
+      <Box sx={{ py: 2 }}>
+        <LinearProgress />
+        <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1, display: 'block' }}>
+          Connecting to /metrics endpoint...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (prom.error) {
+    return (
+      <Box sx={{ py: 2 }}>
+        <Typography variant="body2" color="error">
+          Metrics unavailable: {prom.error}
+        </Typography>
+      </Box>
+    );
+  }
+
+  const dbBarData = [
+    { name: 'Chats', count: prom.dbRowCounts.chats, color: '#6366f1' },
+    { name: 'Messages', count: prom.dbRowCounts.messages, color: '#22c55e' },
+  ];
+
+  const resourceData = [
+    { name: 'RSS Memory', value: prom.processMemoryMb, unit: 'MB', max: 512, color: '#3b82f6' },
+    { name: 'Heap Used', value: prom.heapUsedMb, unit: 'MB', max: 256, color: '#8b5cf6' },
+    { name: 'Event Loop', value: prom.eventLoopLag, unit: 'ms', max: 100, color: '#f59e0b' },
+  ];
+
+  return (
+    <>
+      {/* Server Counters */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: 1.5,
+          mb: 3,
+        }}
+      >
+        <MetricCard
+          icon={<MessageSquare size={20} />}
+          label="Messages Received"
+          value={prom.messagesReceived.toLocaleString()}
+          unit="total"
+          status="good"
+        />
+        <MetricCard
+          icon={<Database size={20} />}
+          label="Messages Stored"
+          value={prom.messagesStored.toLocaleString()}
+          unit="total"
+          status="good"
+        />
+        <MetricCard
+          icon={<Wifi size={20} />}
+          label="WS State"
+          value={
+            prom.wsConnectionState === 1
+              ? 'Connected'
+              : prom.wsConnectionState === 0.5
+                ? 'Reconnecting'
+                : 'Offline'
+          }
+          unit=""
+          status={
+            prom.wsConnectionState === 1 ? 'good' : prom.wsConnectionState === 0.5 ? 'warn' : 'bad'
+          }
+        />
+        <MetricCard
+          icon={<Radio size={20} />}
+          label="Active Connections"
+          value={prom.activeWsConnections}
+          unit="clients"
+          status={prom.activeWsConnections > 0 ? 'good' : 'warn'}
+        />
+        <MetricCard
+          icon={<Lock size={20} />}
+          label="Encryption Ops"
+          value={prom.encryptionOps.toLocaleString()}
+          unit="total"
+          status="good"
+        />
+        <MetricCard
+          icon={<Cpu size={20} />}
+          label="CPU Time"
+          value={prom.cpuUser}
+          unit="sec"
+          status={prom.cpuUser < 60 ? 'good' : 'warn'}
+        />
+      </Box>
+
+      {/* DB Row Counts Bar Chart */}
+      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+        Database Row Counts
+      </Typography>
+      <Box sx={{ height: 120, mb: 3 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={dbBarData} layout="vertical" barCategoryGap="30%">
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.1)"
+              horizontal={false}
+            />
+            <XAxis type="number" tick={{ fontSize: 10 }} stroke="rgba(255,255,255,0.3)" />
+            <YAxis
+              type="category"
+              dataKey="name"
+              tick={{ fontSize: 12 }}
+              stroke="rgba(255,255,255,0.3)"
+              width={80}
+            />
+            <RechartsTooltip
+              contentStyle={{
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+              labelStyle={{ color: '#94a3b8' }}
+              formatter={(value?: number | string) => [Number(value ?? 0).toLocaleString(), 'Rows']}
+            />
+            <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+              {dbBarData.map((entry) => (
+                <Cell key={entry.name} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Box>
+
+      {/* Server Message Throughput (from Prometheus counters) */}
+      {prom.throughputHistory.length > 1 && (
+        <>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+            Server Throughput (Prometheus)
+          </Typography>
+          <Box sx={{ height: 160, mb: 3 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={prom.throughputHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis
+                  dataKey="time"
+                  tick={{ fontSize: 10 }}
+                  stroke="rgba(255,255,255,0.3)"
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fontSize: 10 }} stroke="rgba(255,255,255,0.3)" />
+                <RechartsTooltip
+                  contentStyle={{
+                    backgroundColor: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  labelStyle={{ color: '#94a3b8' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="received"
+                  fill="#6366f1"
+                  fillOpacity={0.3}
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  name="Received/s"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="stored"
+                  fill="#22c55e"
+                  fillOpacity={0.2}
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  name="Stored/s"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Box>
+        </>
+      )}
+
+      {/* Resource Usage Bars */}
+      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+        Resource Usage
+      </Typography>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {resourceData.map((res) => (
+          <Box key={res.name}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {res.name}
+              </Typography>
+              <Typography variant="caption" sx={{ fontFamily: '"Roboto Mono", monospace' }}>
+                {res.value} {res.unit}
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={Math.min((res.value / res.max) * 100, 100)}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                bgcolor: 'rgba(255,255,255,0.05)',
+                '& .MuiLinearProgress-bar': { bgcolor: res.color, borderRadius: 4 },
+              }}
+            />
+          </Box>
+        ))}
+      </Box>
+    </>
   );
 }
 
@@ -363,7 +591,7 @@ export function SystemHealthModal({
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
           Throughput — Last 90s
         </Typography>
-        <Box sx={{ height: 180 }}>
+        <Box sx={{ height: 180, mb: 3 }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={metrics.throughputHistory}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -404,6 +632,30 @@ export function SystemHealthModal({
             </AreaChart>
           </ResponsiveContainer>
         </Box>
+
+        {/* Server Metrics (Prometheus) */}
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          <Box sx={{ color: '#6366f1' }}>
+            <Server size={20} />
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              Server Metrics
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              Live from Prometheus /metrics endpoint
+            </Typography>
+          </Box>
+          <Chip
+            label="Live"
+            size="small"
+            color="success"
+            variant="outlined"
+            sx={{ ml: 'auto', height: 22 }}
+          />
+        </Box>
+        <ServerMetricsSection />
       </DialogContent>
     </Dialog>
   );

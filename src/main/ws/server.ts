@@ -7,6 +7,13 @@ import {
   HEARTBEAT_INTERVAL,
 } from '@shared/constants';
 import { getRandomChat, insertMessage } from '../db/queries';
+import {
+  messagesReceivedTotal,
+  messagesStoredTotal,
+  activeWsConnections,
+  wsConnectionState,
+  ipcCallDuration,
+} from '../metrics/MetricsCollector';
 import type Database from 'better-sqlite3';
 
 const SENDERS = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
@@ -60,8 +67,15 @@ function scheduleNextMessage(db: Database.Database): void {
       body: randomElement(MESSAGES),
     };
 
-    // Write to DB
+    // Write to DB and track metrics
+    const ipcEnd = ipcCallDuration.startTimer({ channel: 'messageGeneration' });
     insertMessage(db, message);
+    ipcEnd();
+    messagesReceivedTotal.inc();
+    messagesStoredTotal.inc();
+
+    // Track active connections from connected clients
+    activeWsConnections.set(wss.clients.size);
 
     // Broadcast to all connected clients
     const payload = JSON.stringify({
@@ -91,12 +105,20 @@ export function startWsServer(
     ? new WebSocketServer({ server: options.server, path: '/ws' })
     : new WebSocketServer({ port: WS_PORT });
 
+  wsConnectionState.set(1);
+
   wss.on('connection', (ws) => {
+    activeWsConnections.inc();
+
     // Send initial connection state
     ws.send(JSON.stringify({ type: 'connection_state', data: 'connected' }));
 
     ws.on('pong', () => {
       (ws as WebSocket & { isAlive: boolean }).isAlive = true;
+    });
+
+    ws.on('close', () => {
+      activeWsConnections.dec();
     });
 
     (ws as WebSocket & { isAlive: boolean }).isAlive = true;
