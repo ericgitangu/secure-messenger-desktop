@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { CHATS_PAGE_SIZE } from '../../shared/constants';
+import { CHATS_PAGE_SIZE } from '@shared/constants';
 import { bridge } from '../api/bridge';
 import type { Chat } from '../types/models';
 

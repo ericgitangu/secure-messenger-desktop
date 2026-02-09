@@ -1,5 +1,5 @@
 import type { Chat, Message, NewMessageEvent } from './models';
-import type { ConnectionState } from '../../shared/constants';
+import type { ConnectionState } from '@shared/constants';
 
 export interface ElectronAPI {
   getChats(offset: number, limit: number): Promise<Chat[]>;

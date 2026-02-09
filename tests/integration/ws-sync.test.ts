@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { WebSocket } from 'ws';
 import Database from 'better-sqlite3';
-import { createTestDb } from '../../src/main/db/schema';
-import { seedDatabase } from '../../src/main/db/seed';
-import { startWsServer, stopWsServer } from '../../src/main/ws/server';
-import { WS_PORT } from '../../src/shared/constants';
+import { createTestDb } from '@main/db/schema';
+import { seedDatabase } from '@main/db/seed';
+import { startWsServer, stopWsServer } from '@main/ws/server';
+import { WS_PORT } from '@shared/constants';
 
 describe('WebSocket Sync Integration', () => {
   let db: Database.Database;
@@ -75,7 +75,14 @@ describe('WebSocket Sync Integration', () => {
       setTimeout(() => reject(new Error('No message received within 5s')), 5000);
     });
 
-    const msg = newMessage as { type: string; data: { message: { id: string; chatId: string; ts: number; sender: string; body: string }; chatId: string; chatTitle: string } };
+    const msg = newMessage as {
+      type: string;
+      data: {
+        message: { id: string; chatId: string; ts: number; sender: string; body: string };
+        chatId: string;
+        chatTitle: string;
+      };
+    };
     expect(msg.type).toBe('new_message');
     expect(msg.data.message.id).toBeDefined();
     expect(msg.data.message.chatId).toBeDefined();
@@ -91,7 +98,9 @@ describe('WebSocket Sync Integration', () => {
   it('should write new messages to the database', async () => {
     startWsServer(db);
 
-    const initialCount = (db.prepare('SELECT COUNT(*) as count FROM messages').get() as { count: number }).count;
+    const initialCount = (
+      db.prepare('SELECT COUNT(*) as count FROM messages').get() as { count: number }
+    ).count;
 
     const ws = new WebSocket(`ws://localhost:${WS_PORT}`);
 
@@ -107,7 +116,9 @@ describe('WebSocket Sync Integration', () => {
       setTimeout(() => reject(new Error('No message within 5s')), 5000);
     });
 
-    const newCount = (db.prepare('SELECT COUNT(*) as count FROM messages').get() as { count: number }).count;
+    const newCount = (
+      db.prepare('SELECT COUNT(*) as count FROM messages').get() as { count: number }
+    ).count;
     expect(newCount).toBeGreaterThan(initialCount);
 
     ws.close();

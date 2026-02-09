@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { ConnectionState } from '../../shared/constants';
+import type { ConnectionState } from '@shared/constants';
 
 interface ConnectionSliceState {
   state: ConnectionState;
@@ -45,5 +45,6 @@ export const connectionSlice = createSlice({
   },
 });
 
-export const { setConnected, setReconnecting, setOffline, setConnectionState } = connectionSlice.actions;
+export const { setConnected, setReconnecting, setOffline, setConnectionState } =
+  connectionSlice.actions;
 export default connectionSlice.reducer;

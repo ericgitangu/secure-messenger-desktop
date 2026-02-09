@@ -3,7 +3,7 @@ import chatsReducer, {
   selectChat,
   updateChatLastMessage,
   resetChats,
-} from '../../../src/renderer/store/chatsSlice';
+} from '@renderer/store/chatsSlice';
 
 describe('chatsSlice', () => {
   const initialState = {
@@ -38,7 +38,7 @@ describe('chatsSlice', () => {
     it('should update lastMessageAt and re-sort', () => {
       const next = chatsReducer(
         stateWithChats,
-        updateChatLastMessage({ chatId: 'chat-3', ts: 5000, incrementUnread: false })
+        updateChatLastMessage({ chatId: 'chat-3', ts: 5000, incrementUnread: false }),
       );
       expect(next.items[0].id).toBe('chat-3'); // Now first (highest ts)
       expect(next.items[0].lastMessageAt).toBe(5000);
@@ -47,7 +47,7 @@ describe('chatsSlice', () => {
     it('should increment unread count when chat is not selected', () => {
       const next = chatsReducer(
         stateWithChats,
-        updateChatLastMessage({ chatId: 'chat-2', ts: 4000, incrementUnread: true })
+        updateChatLastMessage({ chatId: 'chat-2', ts: 4000, incrementUnread: true }),
       );
       const chat2 = next.items.find((c) => c.id === 'chat-2');
       expect(chat2?.unreadCount).toBe(1);
@@ -57,7 +57,7 @@ describe('chatsSlice', () => {
       const withSelected = { ...stateWithChats, selectedChatId: 'chat-2' };
       const next = chatsReducer(
         withSelected,
-        updateChatLastMessage({ chatId: 'chat-2', ts: 4000, incrementUnread: true })
+        updateChatLastMessage({ chatId: 'chat-2', ts: 4000, incrementUnread: true }),
       );
       const chat2 = next.items.find((c) => c.id === 'chat-2');
       expect(chat2?.unreadCount).toBe(0); // unchanged

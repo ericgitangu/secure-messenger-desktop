@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS } from './shared/constants';
-import type { ConnectionState } from './shared/constants';
+import { IPC_CHANNELS } from '@shared/constants';
+import type { ConnectionState } from '@shared/constants';
 
 export interface ElectronAPI {
   getChats(offset: number, limit: number): Promise<unknown[]>;
@@ -17,8 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getChats: (offset: number, limit: number) =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_CHATS, offset, limit),
 
-  markChatRead: (chatId: string) =>
-    ipcRenderer.invoke(IPC_CHANNELS.MARK_CHAT_READ, chatId),
+  markChatRead: (chatId: string) => ipcRenderer.invoke(IPC_CHANNELS.MARK_CHAT_READ, chatId),
 
   getMessages: (chatId: string, beforeTs: number, limit: number) =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_MESSAGES, chatId, beforeTs, limit),
@@ -26,11 +25,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   searchMessages: (chatId: string | null, query: string, limit: number) =>
     ipcRenderer.invoke(IPC_CHANNELS.SEARCH_MESSAGES, chatId, query, limit),
 
-  seedDatabase: () =>
-    ipcRenderer.invoke(IPC_CHANNELS.SEED_DATABASE),
+  seedDatabase: () => ipcRenderer.invoke(IPC_CHANNELS.SEED_DATABASE),
 
-  simulateDisconnect: () =>
-    ipcRenderer.send(IPC_CHANNELS.SIMULATE_DISCONNECT),
+  simulateDisconnect: () => ipcRenderer.send(IPC_CHANNELS.SIMULATE_DISCONNECT),
 
   onConnectionState: (cb: (state: ConnectionState) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, state: ConnectionState) => cb(state);

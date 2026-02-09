@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
-import { createTestDb } from '../../../src/main/db/schema';
-import { seedDatabase } from '../../../src/main/db/seed';
-import { TOTAL_CHATS, MESSAGES_PER_CHAT_MIN } from '../../../src/shared/constants';
+import { createTestDb } from '@main/db/schema';
+import { seedDatabase } from '@main/db/seed';
+import { TOTAL_CHATS, MESSAGES_PER_CHAT_MIN } from '@shared/constants';
 
 describe('Database Seeding', () => {
   let db: Database.Database;
@@ -28,7 +28,9 @@ describe('Database Seeding', () => {
 
     const chats = db.prepare('SELECT id FROM chats').all() as { id: string }[];
     for (const chat of chats) {
-      const msgCount = db.prepare('SELECT COUNT(*) as count FROM messages WHERE chatId = ?').get(chat.id) as { count: number };
+      const msgCount = db
+        .prepare('SELECT COUNT(*) as count FROM messages WHERE chatId = ?')
+        .get(chat.id) as { count: number };
       expect(msgCount.count).toBeGreaterThanOrEqual(MESSAGES_PER_CHAT_MIN);
     }
   });
@@ -70,7 +72,9 @@ describe('Database Seeding', () => {
   it('should set lastMessageAt for each chat', () => {
     seedDatabase(db);
 
-    const chats = db.prepare('SELECT lastMessageAt FROM chats').all() as { lastMessageAt: number }[];
+    const chats = db.prepare('SELECT lastMessageAt FROM chats').all() as {
+      lastMessageAt: number;
+    }[];
     for (const chat of chats) {
       expect(chat.lastMessageAt).toBeGreaterThan(0);
     }

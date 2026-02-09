@@ -3,7 +3,7 @@ import messagesReducer, {
   addMessage,
   clearMessages,
   clearSearch,
-} from '../../../src/renderer/store/messagesSlice';
+} from '@renderer/store/messagesSlice';
 
 describe('messagesSlice', () => {
   const initialState = {
@@ -36,9 +36,7 @@ describe('messagesSlice', () => {
     it('should append to existing messages', () => {
       const existing = {
         ...initialState,
-        items: [
-          { id: 'msg-0', chatId: 'chat-1', ts: 1000, sender: 'Bob', body: 'Hi' },
-        ],
+        items: [{ id: 'msg-0', chatId: 'chat-1', ts: 1000, sender: 'Bob', body: 'Hi' }],
       };
       const newMsg = {
         id: 'msg-1',
@@ -57,9 +55,7 @@ describe('messagesSlice', () => {
     it('should clear all messages and reset hasOlder', () => {
       const state = {
         ...initialState,
-        items: [
-          { id: 'msg-0', chatId: 'chat-1', ts: 1000, sender: 'Bob', body: 'Hi' },
-        ],
+        items: [{ id: 'msg-0', chatId: 'chat-1', ts: 1000, sender: 'Bob', body: 'Hi' }],
         hasOlder: false,
       };
       const next = messagesReducer(state, clearMessages());

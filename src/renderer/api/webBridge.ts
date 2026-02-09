@@ -1,6 +1,6 @@
-import { WS_PORT } from '../../shared/constants';
+import { WS_PORT } from '@shared/constants';
 import type { ElectronAPI } from '../types/ipc';
-import type { ConnectionState } from '../../shared/constants';
+import type { ConnectionState } from '@shared/constants';
 import type { NewMessageEvent } from '../types/models';
 
 /**
