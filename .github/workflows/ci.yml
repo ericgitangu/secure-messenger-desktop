@@ -74,6 +74,10 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+      - name: Install Windows build tools
+        if: runner.os == 'Windows'
+        run: npm install -g windows-build-tools@latest node-gyp@latest || true
+        shell: cmd
       - run: pnpm install --frozen-lockfile
       - run: pnpm run make
       - name: Upload artifacts
