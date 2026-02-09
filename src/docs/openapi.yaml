@@ -1,0 +1,304 @@
+openapi: 3.0.3
+info:
+  title: Secure Messenger Desktop — IPC API
+  description: |
+    Internal IPC API contract between Electron main process and renderer process.
+
+    This API is exposed via `contextBridge` in the preload script and consumed
+    by the React renderer through `window.electronAPI`. While not a traditional
+    REST API, we document it in OpenAPI format for clarity and contract testing.
+
+    **Security:** All message bodies are encrypted with AES-256-GCM before storage
+    and decrypted on read. The encryption key is generated per-device and stored
+    in the app data directory with restrictive file permissions (0600).
+
+    **Transport:** Electron IPC (not HTTP). WebSocket events flow through a local
+    WS server on port 9876.
+  version: 1.0.0
+  contact:
+    name: Eric Gitangu
+    email: developer.ericgitangu@gmail.com
+    url: https://developer.ericgitangu.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: ipc://electron
+    description: Electron IPC Bridge (contextBridge)
+  - url: ws://localhost:9876
+    description: Local WebSocket Server (sync simulator)
+
+tags:
+  - name: Chats
+    description: Chat list operations with pagination
+  - name: Messages
+    description: Message retrieval, search, and pagination
+  - name: Database
+    description: Database management operations
+  - name: Connection
+    description: WebSocket connection management
+  - name: WebSocket Events
+    description: Real-time events from WebSocket server
+
+paths:
+  /chats:
+    get:
+      tags: [Chats]
+      operationId: getChats
+      summary: Fetch paginated chat list
+      description: |
+        Returns chats sorted by `lastMessageAt` DESC with pagination.
+        Uses `idx_chats_last_message` index for O(log n) performance.
+      parameters:
+        - name: offset
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of chats to skip
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+          description: Maximum chats to return
+      responses:
+        '200':
+          description: Paginated list of chats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chat'
+
+  /chats/{chatId}/read:
+    put:
+      tags: [Chats]
+      operationId: markChatRead
+      summary: Mark chat as read
+      description: Sets `unreadCount` to 0 for the specified chat.
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Chat marked as read
+
+  /messages:
+    get:
+      tags: [Messages]
+      operationId: getMessages
+      summary: Fetch paginated messages for a chat
+      description: |
+        Returns messages for a specific chat, ordered by `ts` DESC,
+        with cursor-based pagination using `beforeTs`.
+        Uses `idx_messages_chat_ts` composite index.
+
+        Message bodies are decrypted from AES-256-GCM before return.
+      parameters:
+        - name: chatId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: beforeTs
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unix timestamp (ms) — fetch messages before this time
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Paginated messages (decrypted)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+
+  /messages/search:
+    get:
+      tags: [Messages]
+      operationId: searchMessages
+      summary: Search messages by substring
+      description: |
+        Searches message bodies by substring match (case-insensitive).
+        Can be scoped to a specific chat or search globally.
+
+        Since bodies are encrypted at rest, search decrypts and filters
+        in-memory. In production, this would use FTS5 or searchable encryption.
+
+        Debounced on the client side (300ms, triggers after 3+ characters).
+      parameters:
+        - name: chatId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+            nullable: true
+          description: Scope to specific chat (null = all chats)
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+      responses:
+        '200':
+          description: Search results (decrypted)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+
+  /database/seed:
+    post:
+      tags: [Database]
+      operationId: seedDatabase
+      summary: Seed database with sample data
+      description: |
+        Generates 200 chats and 20,000+ messages on first run.
+        Idempotent — skips if data already exists.
+        All message bodies are encrypted with AES-256-GCM before storage.
+      responses:
+        '200':
+          description: Seed result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chats:
+                    type: integer
+                  messages:
+                    type: integer
+
+  /connection/disconnect:
+    post:
+      tags: [Connection]
+      operationId: simulateDisconnect
+      summary: Simulate connection drop
+      description: |
+        Terminates all WebSocket connections to trigger the reconnection
+        state machine (Connected → Reconnecting → Connected/Offline).
+        Uses exponential backoff: 1s, 2s, 4s, 8s... max 30s.
+      responses:
+        '204':
+          description: Disconnect simulated
+
+components:
+  schemas:
+    Chat:
+      type: object
+      required: [id, title, lastMessageAt, unreadCount]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique chat identifier
+        title:
+          type: string
+          description: Chat display name
+        lastMessageAt:
+          type: integer
+          format: int64
+          description: Unix timestamp (ms) of most recent message
+        unreadCount:
+          type: integer
+          minimum: 0
+          description: Number of unread messages
+
+    Message:
+      type: object
+      required: [id, chatId, ts, sender, body]
+      properties:
+        id:
+          type: string
+          format: uuid
+        chatId:
+          type: string
+          format: uuid
+        ts:
+          type: integer
+          format: int64
+          description: Unix timestamp (ms)
+        sender:
+          type: string
+          description: Message sender name
+        body:
+          type: string
+          description: Decrypted message body (encrypted at rest with AES-256-GCM)
+
+    NewMessageEvent:
+      type: object
+      description: WebSocket event emitted every 1-3 seconds
+      required: [type, data]
+      properties:
+        type:
+          type: string
+          enum: [new_message]
+        data:
+          type: object
+          required: [message, chatId, chatTitle]
+          properties:
+            message:
+              $ref: '#/components/schemas/Message'
+            chatId:
+              type: string
+              format: uuid
+            chatTitle:
+              type: string
+
+    ConnectionStateEvent:
+      type: object
+      description: WebSocket event for connection state changes
+      required: [type, data]
+      properties:
+        type:
+          type: string
+          enum: [connection_state]
+        data:
+          type: string
+          enum: [connected, reconnecting, offline]
+
+    ConnectionState:
+      type: string
+      enum: [connected, reconnecting, offline]
+      description: |
+        State machine:
+        - connected: WebSocket active, heartbeat OK
+        - reconnecting: Connection lost, exponential backoff in progress
+        - offline: Max retries exceeded, manual retry required
