@@ -31,6 +31,11 @@ export const loadMoreChats = createAsyncThunk('chats/loadMore', async (_, { getS
   return chats;
 });
 
+export const createNewChat = createAsyncThunk('chats/create', async (title: string) => {
+  const chat = await bridge().createChat(title);
+  return chat;
+});
+
 export const markChatAsRead = createAsyncThunk('chats/markRead', async (chatId: string) => {
   await bridge().markChatRead(chatId);
   return chatId;
@@ -83,6 +88,9 @@ export const chatsSlice = createSlice({
         state.items = [...state.items, ...action.payload];
         state.offset += action.payload.length;
         state.hasMore = action.payload.length === CHATS_PAGE_SIZE;
+      })
+      .addCase(createNewChat.fulfilled, (state, action) => {
+        state.items.unshift(action.payload);
       })
       .addCase(markChatAsRead.fulfilled, (state, action) => {
         const chat = state.items.find((c) => c.id === action.payload);

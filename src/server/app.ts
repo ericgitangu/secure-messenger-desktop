@@ -1,6 +1,13 @@
 import path from 'node:path';
 import express from 'express';
-import { getChats, markChatRead, getMessages, searchMessages } from '@main/db/queries';
+import {
+  getChats,
+  createChat,
+  sendMessage,
+  markChatRead,
+  getMessages,
+  searchMessages,
+} from '@main/db/queries';
 import { seedDatabase } from '@main/db/seed';
 import { getMetricsText } from '@main/metrics/MetricsCollector';
 import { simulateDisconnect } from '@main/ws/server';
@@ -20,6 +27,17 @@ export function createApp(db: Database.Database): express.Application {
     res.json(chats);
   });
 
+  app.post('/api/chats', (req, res) => {
+    const { title } = req.body as { title: string };
+    if (!title || typeof title !== 'string') {
+      res.status(400).json({ error: 'title is required' });
+      return;
+    }
+    const id = crypto.randomUUID();
+    const chat = createChat(db, id, title.trim());
+    res.status(201).json(chat);
+  });
+
   app.put('/api/chats/:chatId/read', (req, res) => {
     markChatRead(db, req.params.chatId);
     res.json({ ok: true });
@@ -31,6 +49,16 @@ export function createApp(db: Database.Database): express.Application {
     const limit = parseInt(req.query.limit as string) || 50;
     const messages = getMessages(db, chatId, beforeTs, limit);
     res.json(messages);
+  });
+
+  app.post('/api/messages', (req, res) => {
+    const { chatId, body } = req.body as { chatId: string; body: string };
+    if (!chatId || !body || typeof chatId !== 'string' || typeof body !== 'string') {
+      res.status(400).json({ error: 'chatId and body are required' });
+      return;
+    }
+    const message = sendMessage(db, chatId, body.trim());
+    res.status(201).json(message);
   });
 
   app.get('/api/messages/search', (req, res) => {

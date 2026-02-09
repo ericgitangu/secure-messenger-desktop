@@ -35,6 +35,12 @@ export interface SystemMetrics {
 
 const MAX_HISTORY = 30;
 
+// In web mode (fetch over network), latency thresholds are higher than Electron IPC
+const isWebMode = typeof window !== 'undefined' && !window.electronAPI;
+const THRESHOLD_DB = isWebMode ? 500 : 50;
+const THRESHOLD_IPC = isWebMode ? 800 : 200;
+const THRESHOLD_WS = isWebMode ? 500 : 100;
+
 function getTimeLabel(): string {
   return new Date().toLocaleTimeString([], {
     hour: '2-digit',
@@ -52,6 +58,7 @@ export function useSystemHealth(): SystemMetrics {
   const prevMessageCount = useRef(0);
   const prevQueryCount = useRef(0);
   const queryCounterRef = useRef(0);
+  const messageCountRef = useRef(messageCount);
   const [dbQueryCount, setDbQueryCount] = useState(0);
 
   const [wsLatency, setWsLatency] = useState(0);
@@ -61,19 +68,37 @@ export function useSystemHealth(): SystemMetrics {
   const [latencyHistory, setLatencyHistory] = useState<LatencyDataPoint[]>([]);
   const [throughputHistory, setThroughputHistory] = useState<ThroughputDataPoint[]>([]);
 
-  // Simulate latency measurements via IPC round-trip timing
+  // Refs to hold latest latency values so the history interval doesn't depend on them
+  const wsLatencyRef = useRef(wsLatency);
+  const dbLatencyRef = useRef(dbLatency);
+  const ipcLatencyRef = useRef(ipcLatency);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    wsLatencyRef.current = wsLatency;
+  }, [wsLatency]);
+  useEffect(() => {
+    dbLatencyRef.current = dbLatency;
+  }, [dbLatency]);
+  useEffect(() => {
+    ipcLatencyRef.current = ipcLatency;
+  }, [ipcLatency]);
+  useEffect(() => {
+    messageCountRef.current = messageCount;
+  }, [messageCount]);
+
+  // Measure latency via bridge round-trip timing
   const measureLatencies = useCallback(async () => {
     const start = performance.now();
 
     try {
-      // Measure IPC + DB latency together (round-trip through main process)
       const ipcStart = performance.now();
       await bridge().getChats(0, 1);
       const ipcEnd = performance.now();
       const measuredIpc = Math.round(ipcEnd - ipcStart);
 
       setIpcLatency(measuredIpc);
-      setDbLatency(Math.max(1, Math.round(measuredIpc * 0.6))); // DB is ~60% of IPC time
+      setDbLatency(Math.max(1, Math.round(measuredIpc * 0.6)));
       setWsLatency(connectionState === 'connected' ? Math.round(Math.random() * 5 + 1) : 999);
       setLastPingAt(Date.now());
 
@@ -86,33 +111,36 @@ export function useSystemHealth(): SystemMetrics {
     }
   }, [connectionState]);
 
-  // Poll latencies every 2 seconds
+  // Poll latencies every 3 seconds (initial measurement after 100ms to avoid sync setState)
   useEffect(() => {
-    const initialTimeout = setTimeout(() => {
+    const initial = setTimeout(() => {
       void measureLatencies();
-    }, 0);
+    }, 100);
     const interval = setInterval(() => {
       void measureLatencies();
-    }, 2000);
+    }, 3000);
     return () => {
-      clearTimeout(initialTimeout);
+      clearTimeout(initial);
       clearInterval(interval);
     };
   }, [measureLatencies]);
 
-  // Update history every 3 seconds
+  // Update history every 3 seconds — reads from refs so deps are stable
   useEffect(() => {
     const interval = setInterval(() => {
       const time = getTimeLabel();
 
       setLatencyHistory((prev) => {
-        const next = [...prev, { time, ws: wsLatency, db: dbLatency, ipc: ipcLatency }];
+        const next = [
+          ...prev,
+          { time, ws: wsLatencyRef.current, db: dbLatencyRef.current, ipc: ipcLatencyRef.current },
+        ];
         return next.slice(-MAX_HISTORY);
       });
 
-      const msgDelta = messageCount - prevMessageCount.current;
+      const msgDelta = messageCountRef.current - prevMessageCount.current;
       const queryDelta = queryCounterRef.current - prevQueryCount.current;
-      prevMessageCount.current = messageCount;
+      prevMessageCount.current = messageCountRef.current;
       prevQueryCount.current = queryCounterRef.current;
 
       setThroughputHistory((prev) => {
@@ -129,13 +157,15 @@ export function useSystemHealth(): SystemMetrics {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [wsLatency, dbLatency, ipcLatency, messageCount]);
+  }, []);
 
-  // Compute health level
+  // Compute health level with mode-aware thresholds
   const health = useMemo<HealthLevel>(() => {
     if (connectionState === 'offline') return 'unhealthy';
     if (connectionState === 'reconnecting') return 'degraded';
-    if (wsLatency > 100 || dbLatency > 50 || ipcLatency > 200) return 'degraded';
+    if (wsLatency > THRESHOLD_WS || dbLatency > THRESHOLD_DB || ipcLatency > THRESHOLD_IPC) {
+      return 'degraded';
+    }
     return 'healthy';
   }, [connectionState, wsLatency, dbLatency, ipcLatency]);
 

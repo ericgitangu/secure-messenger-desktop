@@ -1,4 +1,3 @@
-import { WS_PORT } from '@shared/constants';
 import type { ElectronAPI } from '../types/ipc';
 import type { ConnectionState } from '@shared/constants';
 import type { NewMessageEvent } from '../types/models';
@@ -16,8 +15,8 @@ export function createWebBridge(): ElectronAPI {
   let reconnectDelay = 1000;
 
   function connectWs(): void {
-    const wsHost = window.location.hostname || 'localhost';
-    const wsUrl = `ws://${wsHost}:${WS_PORT}`;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
 
     try {
       ws = new WebSocket(wsUrl);
@@ -71,6 +70,24 @@ export function createWebBridge(): ElectronAPI {
   const api: ElectronAPI = {
     async getChats(offset: number, limit: number) {
       const res = await fetch(`/api/chats?offset=${offset}&limit=${limit}`);
+      return res.json();
+    },
+
+    async createChat(title: string) {
+      const res = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      return res.json();
+    },
+
+    async sendMessage(chatId: string, body: string) {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId, body }),
+      });
       return res.json();
     },
 

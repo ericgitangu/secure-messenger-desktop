@@ -3,6 +3,8 @@ import type { ConnectionState } from '@shared/constants';
 
 export interface ElectronAPI {
   getChats(offset: number, limit: number): Promise<Chat[]>;
+  createChat(title: string): Promise<Chat>;
+  sendMessage(chatId: string, body: string): Promise<Message>;
   markChatRead(chatId: string): Promise<void>;
   getMessages(chatId: string, beforeTs: number, limit: number): Promise<Message[]>;
   searchMessages(chatId: string | null, query: string, limit: number): Promise<Message[]>;

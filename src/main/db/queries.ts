@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import Database from 'better-sqlite3';
 import { SecurityService } from '../security/SecurityService';
 
@@ -18,7 +19,7 @@ export interface MessageRow {
 
 export function getChats(db: Database.Database, offset: number, limit: number): ChatRow[] {
   const stmt = db.prepare(
-    'SELECT id, title, lastMessageAt, unreadCount FROM chats ORDER BY lastMessageAt DESC LIMIT ? OFFSET ?'
+    'SELECT id, title, lastMessageAt, unreadCount FROM chats ORDER BY lastMessageAt DESC LIMIT ? OFFSET ?',
   );
   return stmt.all(limit, offset) as ChatRow[];
 }
@@ -32,11 +33,11 @@ export function getMessages(
   db: Database.Database,
   chatId: string,
   beforeTs: number,
-  limit: number
+  limit: number,
 ): MessageRow[] {
   const security = SecurityService.getInstance();
   const stmt = db.prepare(
-    'SELECT id, chatId, ts, sender, body FROM messages WHERE chatId = ? AND ts < ? ORDER BY ts DESC LIMIT ?'
+    'SELECT id, chatId, ts, sender, body FROM messages WHERE chatId = ? AND ts < ? ORDER BY ts DESC LIMIT ?',
   );
   const rows = stmt.all(chatId, beforeTs, limit) as MessageRow[];
 
@@ -59,7 +60,7 @@ export function searchMessages(
   db: Database.Database,
   chatId: string | null,
   query: string,
-  limit: number
+  limit: number,
 ): MessageRow[] {
   const security = SecurityService.getInstance();
   const lowerQuery = query.toLowerCase();
@@ -69,13 +70,11 @@ export function searchMessages(
 
   if (chatId) {
     stmt = db.prepare(
-      'SELECT id, chatId, ts, sender, body FROM messages WHERE chatId = ? ORDER BY ts DESC'
+      'SELECT id, chatId, ts, sender, body FROM messages WHERE chatId = ? ORDER BY ts DESC',
     );
     rows = stmt.all(chatId) as MessageRow[];
   } else {
-    stmt = db.prepare(
-      'SELECT id, chatId, ts, sender, body FROM messages ORDER BY ts DESC'
-    );
+    stmt = db.prepare('SELECT id, chatId, ts, sender, body FROM messages ORDER BY ts DESC');
     rows = stmt.all() as MessageRow[];
   }
 
@@ -93,32 +92,63 @@ export function searchMessages(
 
 export function insertMessage(
   db: Database.Database,
-  message: { id: string; chatId: string; ts: number; sender: string; body: string }
+  message: { id: string; chatId: string; ts: number; sender: string; body: string },
 ): void {
   const security = SecurityService.getInstance();
   const encryptedBody = security.encrypt(message.body);
 
   const insertMsg = db.prepare(
-    'INSERT INTO messages (id, chatId, ts, sender, body) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO messages (id, chatId, ts, sender, body) VALUES (?, ?, ?, ?, ?)',
   );
   insertMsg.run(message.id, message.chatId, message.ts, message.sender, encryptedBody);
 
   const updateChat = db.prepare(
-    'UPDATE chats SET lastMessageAt = MAX(lastMessageAt, ?), unreadCount = unreadCount + 1 WHERE id = ?'
+    'UPDATE chats SET lastMessageAt = MAX(lastMessageAt, ?), unreadCount = unreadCount + 1 WHERE id = ?',
   );
   updateChat.run(message.ts, message.chatId);
 }
 
+export function createChat(db: Database.Database, id: string, title: string): ChatRow {
+  const ts = Date.now();
+  const stmt = db.prepare(
+    'INSERT INTO chats (id, title, lastMessageAt, unreadCount) VALUES (?, ?, ?, 0)',
+  );
+  stmt.run(id, title, ts);
+  return { id, title, lastMessageAt: ts, unreadCount: 0 };
+}
+
+export function sendMessage(
+  db: Database.Database,
+  chatId: string,
+  body: string,
+  sender = 'You',
+): MessageRow {
+  const security = SecurityService.getInstance();
+  const id = crypto.randomUUID();
+  const ts = Date.now();
+  const encryptedBody = security.encrypt(body);
+
+  const insertMsg = db.prepare(
+    'INSERT INTO messages (id, chatId, ts, sender, body) VALUES (?, ?, ?, ?, ?)',
+  );
+  insertMsg.run(id, chatId, ts, sender, encryptedBody);
+
+  const updateChat = db.prepare(
+    'UPDATE chats SET lastMessageAt = MAX(lastMessageAt, ?) WHERE id = ?',
+  );
+  updateChat.run(ts, chatId);
+
+  return { id, chatId, ts, sender, body };
+}
+
 export function getRandomChat(db: Database.Database): ChatRow | undefined {
   const stmt = db.prepare(
-    'SELECT id, title, lastMessageAt, unreadCount FROM chats ORDER BY RANDOM() LIMIT 1'
+    'SELECT id, title, lastMessageAt, unreadCount FROM chats ORDER BY RANDOM() LIMIT 1',
   );
   return stmt.get() as ChatRow | undefined;
 }
 
 export function getChatById(db: Database.Database, chatId: string): ChatRow | undefined {
-  const stmt = db.prepare(
-    'SELECT id, title, lastMessageAt, unreadCount FROM chats WHERE id = ?'
-  );
+  const stmt = db.prepare('SELECT id, title, lastMessageAt, unreadCount FROM chats WHERE id = ?');
   return stmt.get(chatId) as ChatRow | undefined;
 }

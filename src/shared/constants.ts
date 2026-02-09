@@ -21,6 +21,8 @@ export const RECONNECT_MAX_RETRIES = 10;
 
 export const IPC_CHANNELS = {
   GET_CHATS: 'db:get-chats',
+  CREATE_CHAT: 'db:create-chat',
+  SEND_MESSAGE: 'db:send-message',
   MARK_CHAT_READ: 'db:mark-chat-read',
   GET_MESSAGES: 'db:get-messages',
   SEARCH_MESSAGES: 'db:search-messages',

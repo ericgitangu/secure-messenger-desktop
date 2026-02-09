@@ -56,6 +56,6 @@ RUN mkdir -p /app/.data
 ENV NODE_ENV=production
 ENV DB_PATH=/app/.data/messenger.db
 
-EXPOSE 3000 9876
+EXPOSE 3000
 
 CMD ["node", "dist/server/index.cjs"]

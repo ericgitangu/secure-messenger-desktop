@@ -11,6 +11,10 @@
 
 **Time-boxed:** ~4 hours. See [What Remains](#what-id-improve-with-more-time) for documented future work.
 
+### Live Demo
+
+**[secure-messenger-desktop.fly.dev](https://secure-messenger-desktop.fly.dev/)** — Browser mode deployed on Fly.io (Frankfurt region). Same React UI as the native Electron app, powered by Express + WebSocket on a single port.
+
 ---
 
 ## Candidate
@@ -70,7 +74,7 @@ docker compose run lint
 | Service       | URL                           | Credentials   |
 | ------------- | ----------------------------- | ------------- |
 | Messenger UI  | http://localhost:3000         | —             |
-| WebSocket     | ws://localhost:9876           | —             |
+| WebSocket     | ws://localhost:3000/ws        | —             |
 | Prometheus    | http://localhost:9090         | —             |
 | Grafana       | http://localhost:3001         | admin / admin |
 | Metrics (raw) | http://localhost:3000/metrics | —             |
@@ -78,8 +82,7 @@ docker compose run lint
 **Architecture:**
 
 ```
-Browser → :3000 (Express: React SPA + REST API)
-       → :9876 (WebSocket: real-time messages)
+Browser → :3000 (Express: React SPA + REST API + WebSocket /ws)
 
 Prometheus :9090 → scrapes :3000/metrics every 5s
 Grafana :3001 → queries Prometheus → "Secure Messenger" dashboard
@@ -486,6 +489,9 @@ With more time, semantic search via embeddings:
 | **D) UI Performance**         | Done   | Virtualized chat list + message list                  |
 | Unread count + mark read      | Done   | Badge component, mark on chat selection               |
 | Load older messages           | Done   | "Load older" button + `startReached` in Virtuoso      |
+| **E) User Actions**           | Done   | Create chat + send message                            |
+| Create new chat               | Done   | Compose button in sidebar, `POST /api/chats`          |
+| Send message                  | Done   | Input bar + send button, AES-256-GCM encrypted        |
 
 ---
 

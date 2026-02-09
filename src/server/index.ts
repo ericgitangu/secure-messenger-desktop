@@ -19,16 +19,16 @@ function main(): void {
     console.log(`[server] Database already seeded (${seedResult.chats} chats)`);
   }
 
-  // Start WebSocket server (port 9876)
-  startWsServer(db);
-  console.log('[server] WebSocket server started on :9876');
-
   // Start Express HTTP server
   const app = createApp(db);
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[server] HTTP server started on :${PORT}`);
     console.log(`[server] Open http://localhost:${PORT} in your browser`);
   });
+
+  // Attach WebSocket to the HTTP server (same port — required for fly.io / single-port deploys)
+  startWsServer(db, { server });
+  console.log(`[server] WebSocket attached to HTTP server on :${PORT}`);
 }
 
 main();

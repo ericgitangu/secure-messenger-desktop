@@ -4,6 +4,8 @@ import type { ConnectionState } from '@shared/constants';
 
 export interface ElectronAPI {
   getChats(offset: number, limit: number): Promise<unknown[]>;
+  createChat(title: string): Promise<unknown>;
+  sendMessage(chatId: string, body: string): Promise<unknown>;
   markChatRead(chatId: string): Promise<void>;
   getMessages(chatId: string, beforeTs: number, limit: number): Promise<unknown[]>;
   searchMessages(chatId: string | null, query: string, limit: number): Promise<unknown[]>;
@@ -16,6 +18,14 @@ export interface ElectronAPI {
 contextBridge.exposeInMainWorld('electronAPI', {
   getChats: (offset: number, limit: number) =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_CHATS, offset, limit),
+
+  createChat: (title: string) => {
+    const id = crypto.randomUUID();
+    return ipcRenderer.invoke(IPC_CHANNELS.CREATE_CHAT, id, title);
+  },
+
+  sendMessage: (chatId: string, body: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SEND_MESSAGE, chatId, body),
 
   markChatRead: (chatId: string) => ipcRenderer.invoke(IPC_CHANNELS.MARK_CHAT_READ, chatId),
 
