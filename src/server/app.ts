@@ -68,7 +68,7 @@ export function createApp(db: Database.Database): express.Application {
   const rendererDir = path.resolve(__dirname, '../renderer');
   app.use(express.static(rendererDir));
 
-  app.get('*', (_req, res) => {
+  app.get('/{*path}', (_req, res) => {
     res.sendFile(path.join(rendererDir, 'index.html'));
   });
 
