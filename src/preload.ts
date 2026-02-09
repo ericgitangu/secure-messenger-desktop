@@ -29,16 +29,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   simulateDisconnect: () => ipcRenderer.send(IPC_CHANNELS.SIMULATE_DISCONNECT),
 
-  onConnectionState: (cb: (state: ConnectionState) => void) => {
-    const handler = (_event: Electron.IpcRendererEvent, state: ConnectionState) => cb(state);
+  onConnectionState: (cb: (state: ConnectionState) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, state: ConnectionState): void => cb(state);
     ipcRenderer.on(IPC_CHANNELS.CONNECTION_STATE, handler);
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.CONNECTION_STATE, handler);
     };
   },
 
-  onNewMessage: (cb: (msg: unknown) => void) => {
-    const handler = (_event: Electron.IpcRendererEvent, msg: unknown) => cb(msg);
+  onNewMessage: (cb: (msg: unknown) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, msg: unknown): void => cb(msg);
     ipcRenderer.on(IPC_CHANNELS.NEW_MESSAGE, handler);
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.NEW_MESSAGE, handler);

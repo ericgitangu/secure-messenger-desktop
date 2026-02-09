@@ -15,7 +15,7 @@ export function createWebBridge(): ElectronAPI {
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectDelay = 1000;
 
-  function connectWs() {
+  function connectWs(): void {
     const wsHost = window.location.hostname || 'localhost';
     const wsUrl = `ws://${wsHost}:${WS_PORT}`;
 
@@ -56,7 +56,7 @@ export function createWebBridge(): ElectronAPI {
     };
   }
 
-  function scheduleReconnect() {
+  function scheduleReconnect(): void {
     if (reconnectTimer) return;
     reconnectTimer = setTimeout(() => {
       reconnectTimer = null;

@@ -6,12 +6,12 @@ import { useAppSelector } from '../store';
 import { useChatsActions } from '../hooks/useIpc';
 import { ChatRow } from './ChatRow';
 
-export function ChatList() {
+export function ChatList(): React.JSX.Element {
   const { items, selectedChatId, loading } = useAppSelector((s) => s.chats);
   const { loadChats, selectChat } = useChatsActions();
 
   useEffect(() => {
-    loadChats();
+    void loadChats();
   }, [loadChats]);
 
   const handleChatClick = useCallback(

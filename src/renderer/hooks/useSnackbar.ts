@@ -9,7 +9,14 @@ interface SnackbarState {
   autoHideDuration: number | null;
 }
 
-export function useSnackbar() {
+export function useSnackbar(): SnackbarState & {
+  showSnackbar: (
+    message: string,
+    severity?: SnackbarSeverity,
+    autoHideDuration?: number | null,
+  ) => void;
+  closeSnackbar: () => void;
+} {
   const [state, setState] = useState<SnackbarState>({
     open: false,
     message: '',
@@ -18,10 +25,14 @@ export function useSnackbar() {
   });
 
   const showSnackbar = useCallback(
-    (message: string, severity: SnackbarSeverity = 'info', autoHideDuration: number | null = 3000) => {
+    (
+      message: string,
+      severity: SnackbarSeverity = 'info',
+      autoHideDuration: number | null = 3000,
+    ) => {
       setState({ open: true, message, severity, autoHideDuration });
     },
-    []
+    [],
   );
 
   const closeSnackbar = useCallback(() => {

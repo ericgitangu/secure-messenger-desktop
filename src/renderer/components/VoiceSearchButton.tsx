@@ -8,12 +8,14 @@ interface VoiceSearchButtonProps {
   disabled?: boolean;
 }
 
-export function VoiceSearchButton({ onResult, disabled = false }: VoiceSearchButtonProps) {
-  const { isListening, isSupported, startListening, stopListening } =
-    useSpeechRecognition({
-      language: 'en-US',
-      onResult,
-    });
+export function VoiceSearchButton({
+  onResult,
+  disabled = false,
+}: VoiceSearchButtonProps): React.JSX.Element {
+  const { isListening, isSupported, startListening, stopListening } = useSpeechRecognition({
+    language: 'en-US',
+    onResult,
+  });
 
   if (!isSupported) {
     return (

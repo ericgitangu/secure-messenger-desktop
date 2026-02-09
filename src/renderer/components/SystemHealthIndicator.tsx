@@ -6,12 +6,15 @@ import { useSystemHealth } from '../hooks/useSystemHealth';
 import { SystemHealthModal } from './SystemHealthModal';
 import type { HealthLevel } from '../hooks/useSystemHealth';
 
-const healthConfig: Record<HealthLevel, {
-  label: string;
-  color: 'success' | 'warning' | 'error';
-  icon: React.ReactElement;
-  tooltip: string;
-}> = {
+const healthConfig: Record<
+  HealthLevel,
+  {
+    label: string;
+    color: 'success' | 'warning' | 'error';
+    icon: React.ReactElement;
+    tooltip: string;
+  }
+> = {
   healthy: {
     label: 'Healthy',
     color: 'success',
@@ -32,7 +35,7 @@ const healthConfig: Record<HealthLevel, {
   },
 };
 
-export function SystemHealthIndicator() {
+export function SystemHealthIndicator(): React.JSX.Element {
   const metrics = useSystemHealth();
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -60,11 +63,7 @@ export function SystemHealthIndicator() {
         />
       </Tooltip>
 
-      <SystemHealthModal
-        open={modalOpen}
-        onClose={handleClose}
-        metrics={metrics}
-      />
+      <SystemHealthModal open={modalOpen} onClose={handleClose} metrics={metrics} />
     </>
   );
 }

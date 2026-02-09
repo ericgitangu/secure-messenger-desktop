@@ -15,7 +15,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggleTheme: () => undefined,
 });
 
-export const useThemeMode = () => useContext(ThemeContext);
+export const useThemeMode = (): ThemeContextValue => useContext(ThemeContext);
 
 function getInitialMode(): ThemeMode {
   try {
@@ -27,7 +27,7 @@ function getInitialMode(): ThemeMode {
   return 'dark';
 }
 
-export function AppThemeProvider({ children }: { children: ReactNode }) {
+export function AppThemeProvider({ children }: { children: ReactNode }): React.JSX.Element {
   const [mode, setMode] = useState<ThemeMode>(getInitialMode);
 
   const toggleTheme = useCallback(() => {
