@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+
+# Production-grade pre-commit hooks
+# 1. Lint-staged (ESLint + Prettier on staged files)
+# 2. Security scan with gitleaks (prevent credential leaks)
+# 3. TypeScript type checking
+
+echo "Running pre-commit checks..."
+
+# Step 1: Lint + Format staged files
+pnpm lint-staged || {
+  echo "Lint-staged failed. Fix the issues above."
+  exit 1
+}
+
+# Step 2: Security scan — prevent secrets from being committed
+if command -v gitleaks &> /dev/null; then
+  gitleaks protect --staged --verbose 2>/dev/null || {
+    echo "SECURITY: gitleaks detected potential secrets in staged files!"
+    echo "Review the findings above and remove any credentials."
+    exit 1
+  }
+  echo "Security scan passed."
+else
+  echo "Warning: gitleaks not installed. Skipping secret detection."
+  echo "Install with: brew install gitleaks"
+fi
+
+# Step 3: TypeScript type checking (incremental for speed)
+pnpm tsc --noEmit --incremental 2>/dev/null || {
+  echo "TypeScript type check failed. Fix type errors above."
+  exit 1
+}
+
+echo "All pre-commit checks passed."
