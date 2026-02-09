@@ -1,0 +1,22 @@
+services:
+  test:
+    build:
+      context: .
+      target: test
+    command: pnpm test
+    environment:
+      - NODE_ENV=test
+      - DISPLAY=:99
+
+  lint:
+    build:
+      context: .
+      target: base
+    command: pnpm lint
+
+  app:
+    build:
+      context: .
+      target: build
+    environment:
+      - DISPLAY=:99
