@@ -1,0 +1,47 @@
+# ─── Dependencies ───
+node_modules/
+
+# ─── Build Output ───
+out/
+dist/
+.vite/
+
+# ─── TypeScript ───
+*.tsbuildinfo
+
+# ─── Electron Forge ───
+out/
+
+# ─── SQLite / Data ───
+*.db
+*.sqlite
+.data/
+*.key
+
+# ─── Environment / Secrets ───
+.env
+.env.*
+
+# ─── Logs ───
+*.log
+logs/
+
+# ─── Test Artifacts ───
+coverage/
+*.lcov
+pacts/
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+
+# ─── IDE ───
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─── Package Manager ───
+.npm
+.eslintcache
+*.tgz
