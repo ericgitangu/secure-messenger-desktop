@@ -4,11 +4,15 @@ import Alert from '@mui/material/Alert';
 import type { SnackbarSeverity } from '../hooks/useSnackbar';
 
 interface SnackbarContextValue {
-  showSnackbar: (message: string, severity?: SnackbarSeverity, autoHideDuration?: number | null) => void;
+  showSnackbar: (
+    message: string,
+    severity?: SnackbarSeverity,
+    autoHideDuration?: number | null,
+  ) => void;
 }
 
 const SnackbarContext = createContext<SnackbarContextValue>({
-  showSnackbar: () => {},
+  showSnackbar: () => undefined,
 });
 
 export const useAppSnackbar = () => useContext(SnackbarContext);
@@ -29,10 +33,14 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
   });
 
   const showSnackbar = useCallback(
-    (message: string, severity: SnackbarSeverity = 'info', autoHideDuration: number | null = 3000) => {
+    (
+      message: string,
+      severity: SnackbarSeverity = 'info',
+      autoHideDuration: number | null = 3000,
+    ) => {
       setState({ open: true, message, severity, autoHideDuration });
     },
-    []
+    [],
   );
 
   const handleClose = useCallback((_?: React.SyntheticEvent | Event, reason?: string) => {
@@ -49,7 +57,12 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleClose} severity={state.severity} variant="filled" sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleClose}
+          severity={state.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
           {state.message}
         </Alert>
       </Snackbar>

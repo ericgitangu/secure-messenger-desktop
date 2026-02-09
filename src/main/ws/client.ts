@@ -88,7 +88,7 @@ export function connect(): void {
 
     ws.on('message', (data) => {
       try {
-        const parsed = JSON.parse(data.toString());
+        const parsed = JSON.parse(data.toString()) as { type: string; data: unknown };
 
         if (parsed.type === 'new_message') {
           sendToRenderer(IPC_CHANNELS.NEW_MESSAGE, parsed.data);

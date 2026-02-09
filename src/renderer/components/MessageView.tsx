@@ -9,9 +9,20 @@ import { useAppSelector } from '../store';
 import { useMessagesActions } from '../hooks/useIpc';
 import { MessageBubble } from './MessageBubble';
 import { MessageSearch } from './MessageSearch';
+import type { Message } from '../types/models';
+
+function MessageItemContent(_index: number, message: Message) {
+  return <MessageBubble key={message.id} message={message} isHighlighted={false} />;
+}
+
+function SearchItemContent(_index: number, message: Message) {
+  return <MessageBubble key={message.id} message={message} isHighlighted />;
+}
 
 export function MessageView() {
-  const { items, loading, hasOlder, searchResults, searchQuery } = useAppSelector((s) => s.messages);
+  const { items, loading, hasOlder, searchResults, searchQuery } = useAppSelector(
+    (s) => s.messages,
+  );
   const selectedChatId = useAppSelector((s) => s.chats.selectedChatId);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const { loadOlder } = useMessagesActions();
@@ -71,13 +82,7 @@ export function MessageView() {
             data={displayItems}
             followOutput="smooth"
             startReached={handleStartReached}
-            itemContent={(index, message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isHighlighted={!!searchQuery}
-              />
-            )}
+            itemContent={searchQuery ? SearchItemContent : MessageItemContent}
             style={{ height: 'calc(100vh - 180px)' }}
           />
         </Box>
