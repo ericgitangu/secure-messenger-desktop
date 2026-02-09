@@ -10,7 +10,11 @@ import { useAppSelector } from '../store';
 import { useChatsActions } from '../hooks/useIpc';
 import { ChatRow } from './ChatRow';
 
-export function ChatList(): React.JSX.Element {
+interface ChatListProps {
+  onChatSelected?: () => void;
+}
+
+export function ChatList({ onChatSelected }: ChatListProps): React.JSX.Element {
   const { items, selectedChatId, loading, hasMore } = useAppSelector((s) => s.chats);
   const { loadChats, loadMore, createChat, selectChat } = useChatsActions();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -32,8 +36,9 @@ export function ChatList(): React.JSX.Element {
   const handleChatClick = useCallback(
     (chatId: string) => {
       selectChat(chatId);
+      onChatSelected?.();
     },
-    [selectChat],
+    [selectChat, onChatSelected],
   );
 
   const handleCreateChat = useCallback(() => {
