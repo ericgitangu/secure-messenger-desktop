@@ -1,9 +1,16 @@
 import { useEffect } from 'react';
 import { useAppDispatch } from '../store';
 import { setConnectionState } from '../store/connectionSlice';
-import { addMessage, clearMessages } from '../store/messagesSlice';
+import {
+  addMessage,
+  clearMessages,
+  fetchMessages,
+  loadOlderMessages,
+  searchMessages,
+  clearSearch,
+} from '../store/messagesSlice';
 import { updateChatLastMessage, fetchChats, markChatAsRead, selectChat } from '../store/chatsSlice';
-import { fetchMessages, loadOlderMessages, searchMessages, clearSearch } from '../store/messagesSlice';
+import { bridge } from '../api/bridge';
 import type { ConnectionState } from '../../shared/constants';
 import type { NewMessageEvent } from '../types/models';
 
@@ -11,11 +18,11 @@ export function useIpcListeners() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    const unsubConnection = window.electronAPI.onConnectionState((state: ConnectionState) => {
+    const unsubConnection = bridge().onConnectionState((state: ConnectionState) => {
       dispatch(setConnectionState(state));
     });
 
-    const unsubMessage = window.electronAPI.onNewMessage((data: unknown) => {
+    const unsubMessage = bridge().onNewMessage((data: unknown) => {
       const event = data as NewMessageEvent;
       dispatch(addMessage(event.message));
       dispatch(
@@ -23,7 +30,7 @@ export function useIpcListeners() {
           chatId: event.chatId,
           ts: event.message.ts,
           incrementUnread: true,
-        })
+        }),
       );
     });
 
@@ -54,8 +61,7 @@ export function useMessagesActions() {
 
   return {
     loadOlder: (chatId: string) => dispatch(loadOlderMessages(chatId)),
-    search: (chatId: string | null, query: string) =>
-      dispatch(searchMessages({ chatId, query })),
+    search: (chatId: string | null, query: string) => dispatch(searchMessages({ chatId, query })),
     clearSearch: () => dispatch(clearSearch()),
   };
 }

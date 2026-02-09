@@ -17,6 +17,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "server:dev": "concurrently \"vite --config vite.web.config.mts\" \"tsx src/server/index.ts\"",
+    "server:start": "node dist/server/index.cjs",
+    "build:renderer": "vite build --config vite.web.config.mts",
+    "build:server": "vite build --config vite.server.config.mts",
+    "build:web": "pnpm build:renderer && pnpm build:server",
+    "start:full": "./scripts/start-full-stack.sh",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:native": "docker compose -f docker-compose.native.yml up -d",
+    "docker:native:down": "docker compose -f docker-compose.native.yml down",
     "prepare": "husky"
   },
   "keywords": [
@@ -55,6 +65,7 @@
     "react-window": "^2.2.6",
     "recharts": "^3.7.0",
     "swagger-ui-react": "^5.31.0",
+    "express": "^5.1.0",
     "uuid": "^13.0.0",
     "ws": "^8.19.0"
   },
@@ -98,6 +109,9 @@
     "prettier": "^3.8.1",
     "typescript": "~5.7.3",
     "vite": "^5.4.21",
+    "@types/express": "^5.0.0",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.4",
     "vitest": "^4.0.18"
   },
   "lint-staged": {

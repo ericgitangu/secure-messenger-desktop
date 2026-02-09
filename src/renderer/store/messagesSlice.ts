@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { Message } from '../types/models';
 import { MESSAGES_PAGE_SIZE, SEARCH_RESULTS_LIMIT } from '../../shared/constants';
+import { bridge } from '../api/bridge';
+import type { Message } from '../types/models';
 
 interface MessagesState {
   items: Message[];
@@ -20,13 +21,10 @@ const initialState: MessagesState = {
   searching: false,
 };
 
-export const fetchMessages = createAsyncThunk(
-  'messages/fetch',
-  async (chatId: string) => {
-    const messages = await window.electronAPI.getMessages(chatId, Date.now() + 1, MESSAGES_PAGE_SIZE);
-    return messages;
-  }
-);
+export const fetchMessages = createAsyncThunk('messages/fetch', async (chatId: string) => {
+  const messages = await bridge().getMessages(chatId, Date.now() + 1, MESSAGES_PAGE_SIZE);
+  return messages;
+});
 
 export const loadOlderMessages = createAsyncThunk(
   'messages/loadOlder',
@@ -34,17 +32,17 @@ export const loadOlderMessages = createAsyncThunk(
     const state = getState() as { messages: MessagesState };
     const oldest = state.messages.items[0];
     const beforeTs = oldest ? oldest.ts : Date.now() + 1;
-    const messages = await window.electronAPI.getMessages(chatId, beforeTs, MESSAGES_PAGE_SIZE);
+    const messages = await bridge().getMessages(chatId, beforeTs, MESSAGES_PAGE_SIZE);
     return messages;
-  }
+  },
 );
 
 export const searchMessages = createAsyncThunk(
   'messages/search',
   async ({ chatId, query }: { chatId: string | null; query: string }) => {
-    const results = await window.electronAPI.searchMessages(chatId, query, SEARCH_RESULTS_LIMIT);
+    const results = await bridge().searchMessages(chatId, query, SEARCH_RESULTS_LIMIT);
     return { results, query };
-  }
+  },
 );
 
 export const messagesSlice = createSlice({

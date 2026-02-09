@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAppSelector } from '../store';
+import { bridge } from '../api/bridge';
 
 export type HealthLevel = 'healthy' | 'degraded' | 'unhealthy';
 
@@ -35,7 +36,11 @@ export interface SystemMetrics {
 const MAX_HISTORY = 30;
 
 function getTimeLabel(): string {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return new Date().toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }
 
 export function useSystemHealth(): SystemMetrics {
@@ -43,10 +48,11 @@ export function useSystemHealth(): SystemMetrics {
   const reconnectAttempts = useAppSelector((s) => s.connection.reconnectAttempts);
   const messageCount = useAppSelector((s) => s.messages.items.length);
 
-  const startTime = useRef(Date.now());
+  const [startTimestamp] = useState(() => Date.now());
   const prevMessageCount = useRef(0);
   const prevQueryCount = useRef(0);
-  const queryCounter = useRef(0);
+  const queryCounterRef = useRef(0);
+  const [dbQueryCount, setDbQueryCount] = useState(0);
 
   const [wsLatency, setWsLatency] = useState(0);
   const [dbLatency, setDbLatency] = useState(0);
@@ -62,7 +68,7 @@ export function useSystemHealth(): SystemMetrics {
     try {
       // Measure IPC + DB latency together (round-trip through main process)
       const ipcStart = performance.now();
-      await window.electronAPI.getChats(0, 1);
+      await bridge().getChats(0, 1);
       const ipcEnd = performance.now();
       const measuredIpc = Math.round(ipcEnd - ipcStart);
 
@@ -71,7 +77,8 @@ export function useSystemHealth(): SystemMetrics {
       setWsLatency(connectionState === 'connected' ? Math.round(Math.random() * 5 + 1) : 999);
       setLastPingAt(Date.now());
 
-      queryCounter.current++;
+      queryCounterRef.current++;
+      setDbQueryCount(queryCounterRef.current);
     } catch {
       setWsLatency(999);
       setDbLatency(999);
@@ -81,11 +88,16 @@ export function useSystemHealth(): SystemMetrics {
 
   // Poll latencies every 2 seconds
   useEffect(() => {
-    measureLatencies().catch(() => {});
+    const initialTimeout = setTimeout(() => {
+      void measureLatencies();
+    }, 0);
     const interval = setInterval(() => {
-      measureLatencies().catch(() => {});
+      void measureLatencies();
     }, 2000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, [measureLatencies]);
 
   // Update history every 3 seconds
@@ -99,16 +111,19 @@ export function useSystemHealth(): SystemMetrics {
       });
 
       const msgDelta = messageCount - prevMessageCount.current;
-      const queryDelta = queryCounter.current - prevQueryCount.current;
+      const queryDelta = queryCounterRef.current - prevQueryCount.current;
       prevMessageCount.current = messageCount;
-      prevQueryCount.current = queryCounter.current;
+      prevQueryCount.current = queryCounterRef.current;
 
       setThroughputHistory((prev) => {
-        const next = [...prev, {
-          time,
-          messagesPerSec: Math.round(msgDelta / 3 * 10) / 10,
-          queriesPerSec: Math.round(queryDelta / 3 * 10) / 10,
-        }];
+        const next = [
+          ...prev,
+          {
+            time,
+            messagesPerSec: Math.round((msgDelta / 3) * 10) / 10,
+            queriesPerSec: Math.round((queryDelta / 3) * 10) / 10,
+          },
+        ];
         return next.slice(-MAX_HISTORY);
       });
     }, 3000);
@@ -124,7 +139,15 @@ export function useSystemHealth(): SystemMetrics {
     return 'healthy';
   }, [connectionState, wsLatency, dbLatency, ipcLatency]);
 
-  const uptime = useMemo(() => Math.floor((Date.now() - startTime.current) / 1000), []);
+  const [uptime, setUptime] = useState(0);
+
+  // Update uptime every 3 seconds (alongside throughput history)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUptime(Math.floor((Date.now() - startTimestamp) / 1000));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [startTimestamp]);
 
   const messagesPerSecond = useMemo(() => {
     const latest = throughputHistory[throughputHistory.length - 1];
@@ -144,7 +167,7 @@ export function useSystemHealth(): SystemMetrics {
     uptime,
     messagesReceived: messageCount,
     messagesPerSecond,
-    dbQueryCount: queryCounter.current,
+    dbQueryCount,
     queriesPerSecond,
     wsReconnects: reconnectAttempts,
     lastPingAt,

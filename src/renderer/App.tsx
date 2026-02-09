@@ -14,6 +14,7 @@ import { SystemHealthIndicator } from './components/SystemHealthIndicator';
 import { ThemeToggle } from './theme/ThemeToggle';
 import { ChatList } from './components/ChatList';
 import { MessageView } from './components/MessageView';
+import { bridge } from './api/bridge';
 
 export function App() {
   useIpcListeners();
@@ -37,7 +38,7 @@ export function App() {
   }, [connectionState, showSnackbar]);
 
   const handleSimulateDisconnect = useCallback(() => {
-    window.electronAPI.simulateDisconnect();
+    bridge().simulateDisconnect();
     showSnackbar('Simulated connection drop', 'warning');
   }, [showSnackbar]);
 

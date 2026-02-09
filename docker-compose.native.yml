@@ -1,27 +1,19 @@
-services:
-  app:
-    build:
-      context: .
-      target: production
-    ports:
-      - "3000:3000"
-      - "9876:9876"
-    environment:
-      - NODE_ENV=production
-      - DB_PATH=/app/.data/messenger.db
-    volumes:
-      - app-data:/app/.data
-    restart: unless-stopped
+# Backend services for native Electron development.
+# Used by: pnpm start:full / scripts/start-full-stack.sh
+#
+# Starts Prometheus + Grafana that scrape the local Express/WS server
+# running alongside Electron on the host machine.
 
+services:
   prometheus:
     image: prom/prometheus:v2.51.0
     ports:
       - "9090:9090"
     volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/prometheus.native.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
-    depends_on:
-      - app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   grafana:
@@ -40,21 +32,6 @@ services:
       - prometheus
     restart: unless-stopped
 
-  test:
-    build:
-      context: .
-      target: test
-    command: pnpm test
-    environment:
-      - NODE_ENV=test
-
-  lint:
-    build:
-      context: .
-      target: deps
-    command: pnpm lint
-
 volumes:
-  app-data:
   prometheus-data:
   grafana-data:
