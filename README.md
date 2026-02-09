@@ -23,12 +23,16 @@
 
 **[secure-messenger-desktop.fly.dev](https://secure-messenger-desktop.fly.dev/)** — Browser mode deployed on Fly.io (Frankfurt region). Same React UI as the native Electron app, powered by Express + WebSocket on a single port.
 
-**Try it now:**
+**[Try it now →](https://secure-messenger-desktop.fly.dev/)**
 
 - Create new chats (pen icon in sidebar)
 - Send messages (input bar at bottom)
 - Watch real-time streaming messages arrive
 - Click the **System Health** indicator in the header to see the built-in monitoring dashboard with live Prometheus metrics, charts, and resource usage
+
+### App Walkthrough
+
+![Secure Messenger Demo](public/demo.gif)
 
 ---
 
