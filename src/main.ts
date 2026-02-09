@@ -56,6 +56,14 @@ function registerIpcHandlers(): void {
     return queries.getChats(db, offset, limit);
   });
 
+  ipcMain.handle(IPC_CHANNELS.CREATE_CHAT, (_event, id: string, title: string) => {
+    return queries.createChat(db, id, title);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SEND_MESSAGE, (_event, chatId: string, body: string) => {
+    return queries.sendMessage(db, chatId, body);
+  });
+
   ipcMain.handle(IPC_CHANNELS.MARK_CHAT_READ, (_event, chatId: string) => {
     queries.markChatRead(db, chatId);
   });

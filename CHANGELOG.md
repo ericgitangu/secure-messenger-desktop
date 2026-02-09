@@ -2,6 +2,35 @@
 
 All notable changes to this project follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.1.0] - 2026-02-09
+
+### Added
+
+- **Fly.io deployment** — Live demo at [secure-messenger-desktop.fly.dev](https://secure-messenger-desktop.fly.dev/) (Frankfurt region)
+- **Automated native module rebuild** — `scripts/ensure-native.sh` tracks build target via marker file; `predev`/`pretest`/`premake` lifecycle scripts auto-rebuild `better-sqlite3` for Electron or Node.js as needed, eliminating manual `electron-rebuild` / `node-gyp rebuild` switching
+- **Create chat** — New compose button (pen icon) in chat list header; type a name and press Enter to create a new conversation; wired end-to-end: DB → IPC → preload → Redux → Express API (`POST /api/chats`)
+- **Send message** — Text input with send button at the bottom of the message view; messages are AES-256-GCM encrypted and stored in SQLite; chat list re-sorts on send; wired end-to-end: DB → IPC → preload → Redux → Express API (`POST /api/messages`)
+- **Chat list scroll pagination** — Infinite scroll in `ChatList` with `onScroll` handler triggering `loadMoreChats` when near bottom
+- **Dependabot** — Automated dependency updates for pnpm (`.github/dependabot.yml`)
+- **HTML test reporter** — Visual test results via vitest HTML reporter
+
+### Fixed
+
+- **Health dashboard empty charts** — History `useEffect` depended on latency state values that changed every 2s, resetting the 3s interval before it could fire; moved to refs so the interval is stable
+- **Health dashboard degraded on fly.io** — Thresholds were tuned for local Electron IPC; added mode-aware thresholds (500ms DB / 800ms IPC in web mode vs 50ms / 200ms in Electron)
+- **Search and pagination infinite loop** — `useChatsActions` and `useMessagesActions` returned new function references every render, causing `useEffect` re-dispatch loops; stabilized with `useCallback` and `useMemo`
+- **Theme toggle visibility** — Icon invisible in light mode (`color="inherit"`); fixed with `sx={{ color: 'text.primary' }}`
+- **ESLint warnings** — Resolved all 37 warnings (unsafe `any` types, missing display names, unused variables)
+- **Electron Forge production build** — Fixed `executableName` casing and path alias resolution
+
+### Changed
+
+- **WebSocket in web/Docker mode** — WS server now attaches to the HTTP server (`/ws` path) instead of a separate port 9876; enables single-port deployments (Fly.io, Render, Railway)
+- **Docker Compose** — Removed separate WS port mapping since WS shares the HTTP port
+- **Browser WS client** — Connects via `wss://host/ws` (protocol-aware) instead of hardcoded `ws://host:9876`
+
+---
+
 ## [1.0.0] - 2026-02-09
 
 ### Assessment: Chat List + Sync Simulator (~4hr time-box)

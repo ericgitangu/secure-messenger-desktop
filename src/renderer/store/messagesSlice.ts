@@ -37,6 +37,14 @@ export const loadOlderMessages = createAsyncThunk(
   },
 );
 
+export const sendNewMessage = createAsyncThunk(
+  'messages/send',
+  async ({ chatId, body }: { chatId: string; body: string }) => {
+    const message = await bridge().sendMessage(chatId, body);
+    return message;
+  },
+);
+
 export const searchMessages = createAsyncThunk(
   'messages/search',
   async ({ chatId, query }: { chatId: string | null; query: string }) => {
@@ -80,6 +88,9 @@ export const messagesSlice = createSlice({
         const older = [...action.payload].reverse();
         state.items = [...older, ...state.items];
         state.hasOlder = action.payload.length === MESSAGES_PAGE_SIZE;
+      })
+      .addCase(sendNewMessage.fulfilled, (state, action) => {
+        state.items.push(action.payload);
       })
       .addCase(searchMessages.pending, (state) => {
         state.searching = true;

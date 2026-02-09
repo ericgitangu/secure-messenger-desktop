@@ -83,8 +83,13 @@ function scheduleNextMessage(db: Database.Database): void {
   }, delay);
 }
 
-export function startWsServer(db: Database.Database): WebSocketServer {
-  wss = new WebSocketServer({ port: WS_PORT });
+export function startWsServer(
+  db: Database.Database,
+  options?: { server?: import('http').Server },
+): WebSocketServer {
+  wss = options?.server
+    ? new WebSocketServer({ server: options.server, path: '/ws' })
+    : new WebSocketServer({ port: WS_PORT });
 
   wss.on('connection', (ws) => {
     // Send initial connection state

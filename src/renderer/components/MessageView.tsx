@@ -1,10 +1,12 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
-import { ChevronUp } from 'lucide-react';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import { ChevronUp, Send } from 'lucide-react';
 import { useAppSelector } from '../store';
 import { useMessagesActions } from '../hooks/useIpc';
 import { MessageBubble } from './MessageBubble';
@@ -25,7 +27,15 @@ export function MessageView(): React.JSX.Element {
   );
   const selectedChatId = useAppSelector((s) => s.chats.selectedChatId);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
-  const { loadOlder } = useMessagesActions();
+  const { loadOlder, send } = useMessagesActions();
+  const [draft, setDraft] = useState('');
+
+  const handleSend = useCallback(() => {
+    const text = draft.trim();
+    if (!text || !selectedChatId) return;
+    send(selectedChatId, text);
+    setDraft('');
+  }, [draft, selectedChatId, send]);
 
   const handleStartReached = useCallback(() => {
     if (selectedChatId && hasOlder && !loading) {
@@ -63,9 +73,17 @@ export function MessageView(): React.JSX.Element {
           <CircularProgress size={32} />
         </Box>
       ) : (
-        <Box sx={{ flex: 1 }}>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
           {hasOlder && !searchQuery && (
-            <Box sx={{ textAlign: 'center', py: 1 }}>
+            <Box sx={{ textAlign: 'center', py: 1, flexShrink: 0 }}>
               <Button
                 size="small"
                 startIcon={<ChevronUp size={16} />}
@@ -83,10 +101,52 @@ export function MessageView(): React.JSX.Element {
             followOutput="smooth"
             startReached={handleStartReached}
             itemContent={searchQuery ? SearchItemContent : MessageItemContent}
-            style={{ height: 'calc(100vh - 180px)' }}
+            style={{ flex: 1, minHeight: 0 }}
           />
         </Box>
       )}
+
+      {/* Message input — pinned at bottom */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1,
+          alignItems: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Type a message..."
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+        />
+        <IconButton
+          onClick={handleSend}
+          disabled={!draft.trim()}
+          color="primary"
+          sx={{
+            bgcolor: 'primary.main',
+            color: 'white',
+            '&:hover': { bgcolor: 'primary.dark' },
+            '&:disabled': { bgcolor: 'action.disabledBackground' },
+          }}
+        >
+          <Send size={18} />
+        </IconButton>
+      </Box>
     </Box>
   );
 }
