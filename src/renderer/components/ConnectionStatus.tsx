@@ -20,7 +20,7 @@ const stateConfig = {
   },
 };
 
-export function ConnectionStatus() {
+export function ConnectionStatus(): React.JSX.Element {
   const connectionState = useAppSelector((s) => s.connection.state);
   const config = stateConfig[connectionState];
 

@@ -58,12 +58,15 @@ function MetricCard({
   value: string | number;
   unit: string;
   status: 'good' | 'warn' | 'bad';
-}) {
+}): React.JSX.Element {
   const statusColor = useMemo(() => {
     switch (status) {
-      case 'good': return '#22c55e';
-      case 'warn': return '#f59e0b';
-      case 'bad': return '#ef4444';
+      case 'good':
+        return '#22c55e';
+      case 'warn':
+        return '#f59e0b';
+      case 'bad':
+        return '#ef4444';
     }
   }, [status]);
 
@@ -86,7 +89,10 @@ function MetricCard({
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
           {label}
         </Typography>
-        <Typography variant="body1" sx={{ fontWeight: 700, fontFamily: '"Roboto Mono", monospace' }}>
+        <Typography
+          variant="body1"
+          sx={{ fontWeight: 700, fontFamily: '"Roboto Mono", monospace' }}
+        >
           {value}
           <Typography component="span" variant="caption" sx={{ ml: 0.5, color: 'text.secondary' }}>
             {unit}
@@ -97,7 +103,15 @@ function MetricCard({
   );
 }
 
-function ServiceStatus({ name, latency, icon }: { name: string; latency: number; icon: React.ReactElement }) {
+function ServiceStatus({
+  name,
+  latency,
+  icon,
+}: {
+  name: string;
+  latency: number;
+  icon: React.ReactElement;
+}): React.JSX.Element {
   const status = useMemo(() => {
     if (latency > 200) return 'unhealthy' as const;
     if (latency > 50) return 'degraded' as const;
@@ -106,9 +120,12 @@ function ServiceStatus({ name, latency, icon }: { name: string; latency: number;
 
   const healthIcon = useMemo(() => {
     switch (status) {
-      case 'healthy': return <HeartPulse size={14} />;
-      case 'degraded': return <Activity size={14} />;
-      case 'unhealthy': return <AlertTriangle size={14} />;
+      case 'healthy':
+        return <HeartPulse size={14} />;
+      case 'degraded':
+        return <Activity size={14} />;
+      case 'unhealthy':
+        return <AlertTriangle size={14} />;
     }
   }, [status]);
 
@@ -138,7 +155,11 @@ function ServiceStatus({ name, latency, icon }: { name: string; latency: number;
   );
 }
 
-export function SystemHealthModal({ open, onClose, metrics }: SystemHealthModalProps) {
+export function SystemHealthModal({
+  open,
+  onClose,
+  metrics,
+}: SystemHealthModalProps): React.JSX.Element {
   const uptimeFormatted = useMemo(() => {
     const h = Math.floor(metrics.uptime / 3600);
     const m = Math.floor((metrics.uptime % 3600) / 60);
@@ -161,7 +182,9 @@ export function SystemHealthModal({ open, onClose, metrics }: SystemHealthModalP
         },
       }}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+      <DialogTitle
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ color: healthColors[metrics.health] }}>
             <HeartPulse size={24} />
@@ -182,7 +205,14 @@ export function SystemHealthModal({ open, onClose, metrics }: SystemHealthModalP
 
       <DialogContent sx={{ px: 3, pb: 3 }}>
         {/* Metric Cards Grid */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 1.5, mb: 3 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 1.5,
+            mb: 3,
+          }}
+        >
           <MetricCard
             icon={<Radio size={20} />}
             label="WS Latency"
@@ -245,12 +275,34 @@ export function SystemHealthModal({ open, onClose, metrics }: SystemHealthModalP
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
           Service Status
         </Typography>
-        <Box sx={{ bgcolor: 'background.default', borderRadius: 2, px: 2, py: 1, mb: 3, border: '1px solid', borderColor: 'divider' }}>
-          <ServiceStatus name="WebSocket Server" latency={metrics.wsLatency} icon={<Radio size={16} />} />
+        <Box
+          sx={{
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            px: 2,
+            py: 1,
+            mb: 3,
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <ServiceStatus
+            name="WebSocket Server"
+            latency={metrics.wsLatency}
+            icon={<Radio size={16} />}
+          />
           <Divider />
-          <ServiceStatus name="SQLite Database" latency={metrics.dbLatency} icon={<Database size={16} />} />
+          <ServiceStatus
+            name="SQLite Database"
+            latency={metrics.dbLatency}
+            icon={<Database size={16} />}
+          />
           <Divider />
-          <ServiceStatus name="IPC Bridge" latency={metrics.ipcLatency} icon={<ArrowLeftRight size={16} />} />
+          <ServiceStatus
+            name="IPC Bridge"
+            latency={metrics.ipcLatency}
+            icon={<ArrowLeftRight size={16} />}
+          />
           <Divider />
           <ServiceStatus name="Encryption Service" latency={1} icon={<Shield size={16} />} />
         </Box>
@@ -271,12 +323,38 @@ export function SystemHealthModal({ open, onClose, metrics }: SystemHealthModalP
               />
               <YAxis tick={{ fontSize: 10 }} stroke="rgba(255,255,255,0.3)" />
               <RechartsTooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                contentStyle={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
                 labelStyle={{ color: '#94a3b8' }}
               />
-              <Line type="monotone" dataKey="ws" stroke="#22c55e" strokeWidth={2} dot={false} name="WebSocket" />
-              <Line type="monotone" dataKey="db" stroke="#3b82f6" strokeWidth={2} dot={false} name="Database" />
-              <Line type="monotone" dataKey="ipc" stroke="#a78bfa" strokeWidth={2} dot={false} name="IPC" />
+              <Line
+                type="monotone"
+                dataKey="ws"
+                stroke="#22c55e"
+                strokeWidth={2}
+                dot={false}
+                name="WebSocket"
+              />
+              <Line
+                type="monotone"
+                dataKey="db"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={false}
+                name="Database"
+              />
+              <Line
+                type="monotone"
+                dataKey="ipc"
+                stroke="#a78bfa"
+                strokeWidth={2}
+                dot={false}
+                name="IPC"
+              />
             </LineChart>
           </ResponsiveContainer>
         </Box>
@@ -297,11 +375,32 @@ export function SystemHealthModal({ open, onClose, metrics }: SystemHealthModalP
               />
               <YAxis tick={{ fontSize: 10 }} stroke="rgba(255,255,255,0.3)" />
               <RechartsTooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                contentStyle={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
                 labelStyle={{ color: '#94a3b8' }}
               />
-              <Area type="monotone" dataKey="messagesPerSec" fill="#22c55e" fillOpacity={0.2} stroke="#22c55e" strokeWidth={2} name="Messages/s" />
-              <Area type="monotone" dataKey="queriesPerSec" fill="#3b82f6" fillOpacity={0.2} stroke="#3b82f6" strokeWidth={2} name="Queries/s" />
+              <Area
+                type="monotone"
+                dataKey="messagesPerSec"
+                fill="#22c55e"
+                fillOpacity={0.2}
+                stroke="#22c55e"
+                strokeWidth={2}
+                name="Messages/s"
+              />
+              <Area
+                type="monotone"
+                dataKey="queriesPerSec"
+                fill="#3b82f6"
+                fillOpacity={0.2}
+                stroke="#3b82f6"
+                strokeWidth={2}
+                name="Queries/s"
+              />
             </AreaChart>
           </ResponsiveContainer>
         </Box>

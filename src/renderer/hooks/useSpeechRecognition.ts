@@ -57,14 +57,13 @@ export function useSpeechRecognition({
   const [error, setError] = useState<string | null>(null);
 
   const isBrowserSupported =
-    typeof window !== 'undefined' &&
-    !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    typeof window !== 'undefined' && !!(window.SpeechRecognition ?? window.webkitSpeechRecognition);
   const [isSupported] = useState(isBrowserSupported);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
-    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (Ctor) {
       recognitionRef.current = new Ctor();
     }

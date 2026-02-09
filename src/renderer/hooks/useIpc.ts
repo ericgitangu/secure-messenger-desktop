@@ -14,7 +14,7 @@ import { bridge } from '../api/bridge';
 import type { ConnectionState } from '@shared/constants';
 import type { NewMessageEvent } from '../types/models';
 
-export function useIpcListeners() {
+export function useIpcListeners(): void {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -41,27 +41,35 @@ export function useIpcListeners() {
   }, [dispatch]);
 }
 
-export function useChatsActions() {
+export function useChatsActions(): {
+  loadChats: () => void;
+  selectChat: (chatId: string) => void;
+} {
   const dispatch = useAppDispatch();
 
   return {
-    loadChats: () => dispatch(fetchChats()),
+    loadChats: () => void dispatch(fetchChats()),
     selectChat: (chatId: string) => {
       dispatch(selectChat(chatId));
       dispatch(clearMessages());
       dispatch(clearSearch());
-      dispatch(fetchMessages(chatId));
-      dispatch(markChatAsRead(chatId));
+      void dispatch(fetchMessages(chatId));
+      void dispatch(markChatAsRead(chatId));
     },
   };
 }
 
-export function useMessagesActions() {
+export function useMessagesActions(): {
+  loadOlder: (chatId: string) => void;
+  search: (chatId: string | null, query: string) => void;
+  clearSearch: () => void;
+} {
   const dispatch = useAppDispatch();
 
   return {
-    loadOlder: (chatId: string) => dispatch(loadOlderMessages(chatId)),
-    search: (chatId: string | null, query: string) => dispatch(searchMessages({ chatId, query })),
+    loadOlder: (chatId: string) => void dispatch(loadOlderMessages(chatId)),
+    search: (chatId: string | null, query: string) =>
+      void dispatch(searchMessages({ chatId, query })),
     clearSearch: () => dispatch(clearSearch()),
   };
 }

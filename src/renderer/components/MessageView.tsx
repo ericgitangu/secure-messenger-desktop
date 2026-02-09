@@ -11,15 +11,15 @@ import { MessageBubble } from './MessageBubble';
 import { MessageSearch } from './MessageSearch';
 import type { Message } from '../types/models';
 
-function MessageItemContent(_index: number, message: Message) {
+function MessageItemContent(_index: number, message: Message): React.JSX.Element {
   return <MessageBubble key={message.id} message={message} isHighlighted={false} />;
 }
 
-function SearchItemContent(_index: number, message: Message) {
+function SearchItemContent(_index: number, message: Message): React.JSX.Element {
   return <MessageBubble key={message.id} message={message} isHighlighted />;
 }
 
-export function MessageView() {
+export function MessageView(): React.JSX.Element {
   const { items, loading, hasOlder, searchResults, searchQuery } = useAppSelector(
     (s) => s.messages,
   );
@@ -29,7 +29,7 @@ export function MessageView() {
 
   const handleStartReached = useCallback(() => {
     if (selectedChatId && hasOlder && !loading) {
-      loadOlder(selectedChatId);
+      void loadOlder(selectedChatId);
     }
   }, [selectedChatId, hasOlder, loading, loadOlder]);
 

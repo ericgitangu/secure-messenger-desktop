@@ -3,7 +3,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { Sun, Moon } from 'lucide-react';
 import { useThemeMode } from './ThemeProvider';
 
-export function ThemeToggle() {
+export function ThemeToggle(): React.JSX.Element {
   const { mode, toggleTheme } = useThemeMode();
 
   return (

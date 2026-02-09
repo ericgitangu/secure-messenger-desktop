@@ -14,7 +14,7 @@ import { VoiceSearchButton } from './VoiceSearchButton';
 const DEBOUNCE_MS = 300;
 const MIN_SEARCH_CHARS = 3;
 
-export function MessageSearch() {
+export function MessageSearch(): React.JSX.Element {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, DEBOUNCE_MS);
   const selectedChatId = useAppSelector((s) => s.chats.selectedChatId);
@@ -24,7 +24,7 @@ export function MessageSearch() {
   // Auto-search when debounced query changes and meets minimum length
   useEffect(() => {
     if (debouncedQuery.trim().length >= MIN_SEARCH_CHARS) {
-      search(selectedChatId, debouncedQuery.trim());
+      void search(selectedChatId, debouncedQuery.trim());
     } else if (debouncedQuery.trim().length === 0 && searchQuery) {
       clearSearch();
     }
@@ -92,9 +92,7 @@ export function MessageSearch() {
           </Typography>
         )}
       </Box>
-      {searching && (
-        <LinearProgress sx={{ mt: 0.5, borderRadius: 1, height: 2 }} />
-      )}
+      {searching && <LinearProgress sx={{ mt: 0.5, borderRadius: 1, height: 2 }} />}
     </Box>
   );
 }

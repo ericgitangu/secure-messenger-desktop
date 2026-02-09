@@ -15,10 +15,12 @@ import '@fontsource/inter/700.css';
 import '@fontsource/roboto-mono/400.css';
 import '@fontsource/roboto-mono/500.css';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   await initBridge();
 
-  const root = createRoot(document.getElementById('app')!);
+  const container = document.getElementById('app');
+  if (!container) throw new Error('Root element #app not found');
+  const root = createRoot(container);
 
   root.render(
     <StrictMode>
@@ -33,4 +35,4 @@ async function bootstrap() {
   );
 }
 
-bootstrap();
+void bootstrap();

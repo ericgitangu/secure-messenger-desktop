@@ -15,7 +15,7 @@ const SnackbarContext = createContext<SnackbarContextValue>({
   showSnackbar: () => undefined,
 });
 
-export const useAppSnackbar = () => useContext(SnackbarContext);
+export const useAppSnackbar = (): SnackbarContextValue => useContext(SnackbarContext);
 
 interface SnackbarState {
   open: boolean;
@@ -24,7 +24,7 @@ interface SnackbarState {
   autoHideDuration: number | null;
 }
 
-export function SnackbarProvider({ children }: { children: ReactNode }) {
+export function SnackbarProvider({ children }: { children: ReactNode }): React.JSX.Element {
   const [state, setState] = useState<SnackbarState>({
     open: false,
     message: '',

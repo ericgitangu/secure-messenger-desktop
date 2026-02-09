@@ -16,7 +16,7 @@ import { ChatList } from './components/ChatList';
 import { MessageView } from './components/MessageView';
 import { bridge } from './api/bridge';
 
-export function App() {
+export function App(): React.JSX.Element {
   useIpcListeners();
 
   const connectionState = useAppSelector((s) => s.connection.state);
