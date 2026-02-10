@@ -43,7 +43,7 @@
 |           |                                                                |
 | --------- | -------------------------------------------------------------- |
 | Email     | developer.ericgitangu@gmail.com                                |
-| Phone     | +1 (978) 710-9475(US)  | +254 708 078997(KE)                   |
+| Phone     | +1 (978) 710-9475 (US) \| +254 708 078997 (KE)                 |
 | Portfolio | [developer.ericgitangu.com](https://developer.ericgitangu.com) |
 | Resume    | [resume.ericgitangu.com](https://resume.ericgitangu.com)       |
 | GitHub    | [github.com/ericgitangu](https://github.com/ericgitangu)       |
