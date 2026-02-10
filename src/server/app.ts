@@ -91,6 +91,27 @@ export function createApp(db: Database.Database): express.Application {
     res.json({ ok: true });
   });
 
+  // --- Health check ---
+
+  const startedAt = Date.now();
+
+  app.get('/health', (_req, res) => {
+    try {
+      db.prepare('SELECT 1').get();
+      res.json({
+        status: 'ok',
+        uptime: Math.floor((Date.now() - startedAt) / 1000),
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      res.status(503).json({
+        status: 'error',
+        uptime: Math.floor((Date.now() - startedAt) / 1000),
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
   // --- Prometheus metrics ---
 
   app.get('/metrics', async (_req, res) => {
