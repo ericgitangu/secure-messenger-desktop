@@ -1,8 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import express from 'express';
-import yaml from 'js-yaml';
-import swaggerUi from 'swagger-ui-express';
 import {
   getChats,
   createChat,
@@ -132,10 +130,14 @@ export function createApp(db: Database.Database): express.Application {
   const openapiPath = path.resolve(__dirname, '../docs/openapi.yaml');
   if (fs.existsSync(openapiPath)) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const yaml = require('js-yaml') as typeof import('js-yaml');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const swaggerUi = require('swagger-ui-express') as typeof import('swagger-ui-express');
       const openapiDoc = yaml.load(fs.readFileSync(openapiPath, 'utf8')) as Record<string, unknown>;
       app.use('/swagger', swaggerUi.serve, swaggerUi.setup(openapiDoc));
     } catch {
-      // graceful skip — openapi.yaml may not exist in Electron dev mode
+      // graceful skip — modules may not be available in Electron dev mode
     }
   }
 
