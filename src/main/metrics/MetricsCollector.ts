@@ -11,7 +11,7 @@ import { Registry, Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom
  * - Active connections (gauge)
  *
  * In production, these would be scraped by Prometheus/Grafana.
- * For the assessment, they're exposed via IPC for the System Health modal.
+ * They're also exposed via IPC for the System Health modal.
  */
 
 const register = new Registry();

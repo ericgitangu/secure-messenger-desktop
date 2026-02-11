@@ -2,7 +2,7 @@
   "name": "secure-messenger-desktop",
   "productName": "Secure Messenger Desktop",
   "version": "1.0.0",
-  "description": "Technical assessment: Electron + React + TypeScript secure messenger client — Chat List + Sync Simulator",
+  "description": "Electron + React + TypeScript secure messenger client — Chat List + Sync Simulator",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
