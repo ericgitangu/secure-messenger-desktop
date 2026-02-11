@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
  * exchanged between the WS server and client.
  *
  * In a production system, these would use @pact-foundation/pact
- * with a message pact for async event contracts. For this assessment,
+ * with a message pact for async event contracts. Here,
  * we define and validate the contract schema directly.
  */
 
@@ -186,7 +186,7 @@ describe('WebSocket Contract', () => {
             chatId: 'chat-1',
             chatTitle: 'Bob',
           },
-        })
+        }),
       ).toBe(true);
     });
 

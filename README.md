@@ -15,9 +15,7 @@
 [![pnpm](https://img.shields.io/badge/pnpm-10.x-F69220.svg)](https://pnpm.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> Technical assessment: Electron + React + TypeScript secure messenger client with real-time sync, virtualized lists, and AES-256-GCM encryption.
-
-**Time-boxed:** ~4 hours. See [What Remains](#what-id-improve-with-more-time) for documented future work.
+> Electron + React + TypeScript secure messenger client with real-time sync, virtualized lists, and AES-256-GCM encryption.
 
 ### Live Demo
 
@@ -36,7 +34,7 @@
 
 ---
 
-## Candidate
+## Author
 
 **Eric Gitangu** | Senior Software Engineer Architect | 10+ years
 
@@ -288,7 +286,7 @@ stateDiagram-v2
 | -------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Database**               | `better-sqlite3`               | Synchronous C++ binding — 5-10x faster than sql.js (WASM). WAL mode for concurrent reads. Sync I/O in main process doesn't block renderer.      |
 | **Encryption**             | AES-256-GCM (Node.js `crypto`) | Authenticated encryption — 96-bit random IV per message, 128-bit auth tag for tamper detection. Production path: Signal Protocol via libsignal. |
-| **State Management**       | Redux Toolkit                  | Assessment requires Redux. `createSlice` maps cleanly to connection state machine. RTK DevTools for debugging.                                  |
+| **State Management**       | Redux Toolkit                  | `createSlice` maps cleanly to connection state machine. RTK DevTools for debugging.                                                             |
 | **Chat Virtualization**    | `react-window` `FixedSizeList` | Fixed 72px rows, 200 items. Smallest bundle, fastest for uniform rows.                                                                          |
 | **Message Virtualization** | `react-virtuoso` `Virtuoso`    | Variable-height bubbles, `startReached` for load-older, `followOutput` for auto-scroll. Purpose-built for chat UX.                              |
 | **UI Framework**           | MUI v7 + lucide-react          | Chip (connection), Badge (unread), Snackbar (notifications), Dialog (health modal).                                                             |
@@ -473,7 +471,7 @@ With more time, semantic search via embeddings:
 
 ---
 
-## Evaluation Criteria — How We Meet Them
+## Design Goals
 
 ### SQLite Usage Quality
 
@@ -583,7 +581,7 @@ The IPC API is documented in OpenAPI 3.0 format:
 
 ## Build Issues Encountered & Solutions
 
-During the 4-hour assessment, several build/runtime issues were identified and resolved:
+Several build/runtime issues were identified and resolved during development:
 
 ### 1. pnpm + Electron Forge: `node-linker` error
 
@@ -653,7 +651,7 @@ pnpm make         # → premake rebuilds for Electron
 
 ---
 
-## What I'd Improve With More Time
+## Roadmap
 
 1. **FTS5 full-text search** — Replace decrypt-then-filter with SQLite FTS5 for sub-ms search
 2. **Semantic search** — Local embeddings for natural language queries

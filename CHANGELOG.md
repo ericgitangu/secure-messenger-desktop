@@ -33,7 +33,7 @@ All notable changes to this project follow [Conventional Commits](https://www.co
 
 ## [1.0.0] - 2026-02-09
 
-### Assessment: Chat List + Sync Simulator (~4hr time-box)
+### Initial Release: Chat List + Sync Simulator
 
 #### feat: scaffold electron + react + typescript project
 
