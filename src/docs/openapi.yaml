@@ -24,6 +24,8 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
+  - url: /api
+    description: REST API (Express HTTP server)
   - url: ipc://electron
     description: Electron IPC Bridge (contextBridge)
   - url: ws://localhost:9876

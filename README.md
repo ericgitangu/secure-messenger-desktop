@@ -97,6 +97,7 @@ docker compose run lint
 | Prometheus    | http://localhost:9090         | —             |
 | Grafana       | http://localhost:3001         | admin / admin |
 | Metrics (raw) | http://localhost:3000/metrics | —             |
+| Swagger UI    | http://localhost:3000/swagger | —             |
 
 **Architecture:**
 
@@ -573,6 +574,7 @@ With more time, semantic search via embeddings:
 
 The IPC API is documented in OpenAPI 3.0 format:
 
+- **Live:** [secure-messenger-desktop.fly.dev/swagger](https://secure-messenger-desktop.fly.dev/swagger) — interactive Swagger UI
 - **Spec:** [`src/docs/openapi.yaml`](src/docs/openapi.yaml)
 - **Endpoints:** 6 IPC handlers + 2 WebSocket event types
 - **Schemas:** Chat, Message, NewMessageEvent, ConnectionState
@@ -629,6 +631,7 @@ flyctl deploy          # Deploy from local (uses Dockerfile)
 | ----------------------------------------------------------------------------- | --------------------- |
 | [secure-messenger-desktop.fly.dev](https://secure-messenger-desktop.fly.dev/) | React SPA + REST API  |
 | `wss://secure-messenger-desktop.fly.dev/ws`                                   | WebSocket (same port) |
+| [Swagger UI](https://secure-messenger-desktop.fly.dev/swagger)                | OpenAPI docs          |
 
 The WebSocket server attaches to the HTTP server on the `/ws` path, enabling single-port deployments compatible with Fly.io, Render, Railway, and other PaaS providers.
 
@@ -662,7 +665,7 @@ pnpm make         # → premake rebuilds for Electron
 8. **File sharing** — Encrypted attachments with thumbnails
 9. **Auto-updater** — Squirrel-based updates via electron-forge
 10. **i18n** — i18next for multi-language support
-11. **Swagger UI** — Embedded OpenAPI viewer component
+11. ~~**Swagger UI**~~ — Done: live at `/swagger`
 
 ---
 

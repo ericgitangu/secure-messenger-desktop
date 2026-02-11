@@ -13,6 +13,8 @@ const nativeExternals = [
   'prom-client',
   'express',
   'electron',
+  'swagger-ui-express',
+  'js-yaml',
 ];
 
 export default defineConfig({

@@ -1,5 +1,8 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import express from 'express';
+import yaml from 'js-yaml';
+import swaggerUi from 'swagger-ui-express';
 import {
   getChats,
   createChat,
@@ -124,14 +127,30 @@ export function createApp(db: Database.Database): express.Application {
     }
   });
 
+  // --- Swagger UI ---
+
+  const openapiPath = path.resolve(__dirname, '../docs/openapi.yaml');
+  if (fs.existsSync(openapiPath)) {
+    try {
+      const openapiDoc = yaml.load(fs.readFileSync(openapiPath, 'utf8')) as Record<string, unknown>;
+      app.use('/swagger', swaggerUi.serve, swaggerUi.setup(openapiDoc));
+    } catch {
+      // graceful skip — openapi.yaml may not exist in Electron dev mode
+    }
+  }
+
   // --- Static SPA fallback ---
 
   const rendererDir = path.resolve(__dirname, '../renderer');
-  app.use(express.static(rendererDir));
+  const indexHtml = path.join(rendererDir, 'index.html');
 
-  app.get('/{*path}', (_req, res) => {
-    res.sendFile(path.join(rendererDir, 'index.html'));
-  });
+  if (fs.existsSync(indexHtml)) {
+    app.use(express.static(rendererDir));
+
+    app.get('/{*path}', (_req, res) => {
+      res.sendFile(indexHtml);
+    });
+  }
 
   return app;
 }
