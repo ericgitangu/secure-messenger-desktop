@@ -267,7 +267,7 @@ function ServerMetricsSection(): React.JSX.Element {
         Database Row Counts
       </Typography>
       <Box sx={{ height: 120, mb: 3 }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart data={dbBarData} layout="vertical" barCategoryGap="30%">
             <CartesianGrid
               strokeDasharray="3 3"
@@ -308,7 +308,7 @@ function ServerMetricsSection(): React.JSX.Element {
             Server Throughput (Prometheus)
           </Typography>
           <Box sx={{ height: 160, mb: 3 }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={prom.throughputHistory}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis
@@ -540,7 +540,7 @@ export function SystemHealthModal({
           Latency (ms) — Last 90s
         </Typography>
         <Box sx={{ height: 200, mb: 3 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={metrics.latencyHistory}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
               <XAxis
@@ -592,7 +592,7 @@ export function SystemHealthModal({
           Throughput — Last 90s
         </Typography>
         <Box sx={{ height: 180, mb: 3 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={metrics.throughputHistory}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
               <XAxis
